@@ -1,4 +1,4 @@
-import React, {useState} from 'react'
+import React, {useEffect, useState} from 'react'
 import Sidebar from "../components/Sidebar.jsx";
 import '../index.css';
 import {
@@ -13,12 +13,14 @@ import {
     RotateCcw,
     Percent,
     Settings,
-    Users
+    Users,
+    LogOut
 } from 'lucide-react';
 import Header from "../components/Header.jsx";
 import InfoMenu from "../components/InfoMenu.jsx";
 import {availableRoomsImg, maintenanceRoomsImg, needsCleaningRoomsImg, occupiedRoomsImg} from "../utils/index.js";
 import Table from "../components/Table.jsx";
+import GuestLogsFilterForm from "../components/GuestLogsFilterForm.jsx";
 
 const menuItems = [
     { label: 'Guest Logs', icon: FileText, path: '/' },
@@ -44,11 +46,6 @@ const roomsList = [
 ];
 
 const Index = () => {
-    const [searchTerm, setSearchTerm] = useState('');
-    const [tableSearchTerm, tableSetSearchTerm] = useState('');
-    const [startDate, setStartDate] = useState('');
-    const [endDate, setEndDate] = useState('');
-
     const columns = [
         { label: 'Name', accessor: 'name' },
         { label: 'Email', accessor: 'email' },
@@ -63,7 +60,7 @@ const Index = () => {
         }
     ];
 
-    const data = [
+    const dataList = [
         { name: 'John Doe', email: 'john@example.com', status: 'Active' },
         { name: 'Jane Smith', email: 'jane@example.com', status: 'Inactive' },
     ];
@@ -85,6 +82,38 @@ const Index = () => {
         }
     };
 
+    const totalPages = 20;
+
+    const [searchTerm, setSearchTerm] = useState('');
+    const [tableSearchTerm, tableSetSearchTerm] = useState('');
+    const [startDate, setStartDate] = useState('');
+    const [endDate, setEndDate] = useState('');
+    const [page, setPage] = useState(1);
+    const [data, setData] = useState([]);
+    const [pageCount, setPageCount] = useState(1);
+
+    const fetchData = async (page) => {
+        // const res = await fetch(`/api/items?page=${page}`);
+        // const { data, totalPages } = await res.json();
+
+        console.log(page);
+        setData(dataList);
+        setPageCount(totalPages);
+    };
+
+    useEffect(() => {
+        fetchData(page);
+    }, [page]);
+
+    const handlePageChange = (newPage) => {
+        if (newPage >= 1 && newPage <= pageCount) {
+            setPage(newPage);
+        }
+    };
+
+    const onSubmit = () => {
+
+    };
 
     return (
         <div className="flex" >
@@ -93,13 +122,43 @@ const Index = () => {
             <main className="main ps-20 py-6 text-2xl w-full">
                 <Header headerText="Hello Evano 👋🏼," value={searchTerm}  onChange={setSearchTerm} />
                 <InfoMenu menuItems={roomsList}/>
+                <div className="flex justify-end space-x-5 py-3 me-5">
+                    <a
+                        href=""
+                        type="submit"
+                        className="flex items-center gap-2 bg-blue-600 text-white py-3 px-3 rounded-lg font-light text-xs hover:bg-blue-700 transition"
+                    >
+                        <LogIn size={16} />
+                        Check-In
+                    </a>
+                    <a
+                        href=""
+                        type="submit"
+                        className="flex items-center gap-2 bg-blue-600 text-white py-3 px-3 rounded-lg font-light text-xs hover:bg-blue-700 transition"
+                    >
+                        <LogOut size={16} />
+                        Check-Out
+                    </a>
+                </div>
+
                 <Table
-                    headerText={"Guest Logs"}
-                    value={tableSearchTerm} onChange={tableSetSearchTerm}
-                    startDate={startDate} setStartDate={setStartDate}
-                    endDate={endDate} setEndDate={setEndDate}
+                    filterForm={
+                        <GuestLogsFilterForm
+                            headerText="Guest Logs"
+                            value={tableSearchTerm}
+                            onChange={tableSetSearchTerm}
+                            startDate={startDate}
+                            endDate={endDate}
+                            setStartDate={setStartDate}
+                            setEndDate={setEndDate}
+                            onSubmit={onSubmit}
+                        />
+                    }
                     columns={columns}
                     data={data}
+                    currentPage={page}
+                    totalPages={pageCount}
+                    onPageChange={handlePageChange}
                     onEdit={handleEdit}
                     showEdit={true}
                 />

@@ -6,11 +6,11 @@ import Searchbar from "./Searchbar.jsx";
 
 const Icon = Search;
 
-const Header = ({ headerText, placeholder = 'Search...', value, onChange }) => {
+const Header = ({ headerText }) => {
     return (
         <div className="flex justify-between w-full px-4">
             <h2 className="text-xl font-semibold">{headerText}</h2>
-            <Searchbar  placeholder={placeholder} value={value} onChange={onChange} />
+            {/*<Searchbar  placeholder={placeholder} value={value} onChange={onChange} onSubmit={onSubmit} />*/}
         </div>
 
     );

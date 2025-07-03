@@ -35,7 +35,7 @@ const Sidebar = ({ menuItems }) => {
 
                 <div className="pt-6">
                     <Link
-                        to="/logout"
+                        to="/login"
                         className={`flex items-center gap-3 px-3 py-2 rounded transition-all hover:bg-blue-100 text-black`}
                     >
                         <LogIn size={18} />

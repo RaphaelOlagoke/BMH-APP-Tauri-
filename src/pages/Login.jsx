@@ -15,7 +15,7 @@ const Login = () => {
                 <div className="w-full max-w-md">
                     <h2 className="text-3xl font-bold text-center text-gray-800 mb-6">BMH Hotel</h2>
 
-                    <form className="space-y-6">
+                    <form className="space-y-6" action="/" method="GET">
                         <div>
                             <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">
                                 Email

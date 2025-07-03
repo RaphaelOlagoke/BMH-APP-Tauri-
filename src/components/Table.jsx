@@ -5,28 +5,19 @@ import { Pencil } from 'lucide-react';
 
 
 const Table = ({
-headerText,
-value,
-onChange,
-startDate,
-endDate,
-setStartDate,
-setEndDate,
+filterForm,
 columns,
-data,
 onEdit,
 showEdit = false,
+currentPage,
+totalPages,
+onPageChange,
+data
 }) =>
 {
     return (
         <div className="bg-white px-6 py-12 shadow-lg rounded-2xl me-5">
-            <div className="flex justify-between items-center">
-                <h2 className="text-2xl">{headerText}</h2>
-                <div className="flex items-center space-x-5 justify-end">
-                    <Searchbar  placeholder= 'Search...' value={value} onChange={onChange} bgClass="border" />
-                    <DateFilter startDate={startDate} endDate={endDate} setStartDate={setStartDate} setEndDate={setEndDate} />
-                </div>
-            </div>
+            {filterForm && <div className="mb-4">{filterForm}</div>}
 
             {/* Table */}
             <div className="overflow-x-auto mt-6">
@@ -74,6 +65,29 @@ showEdit = false,
                     </tbody>
                 </table>
             </div>
+
+            <div className="flex justify-end items-center gap-2 mt-4">
+                <button
+                    onClick={() => onPageChange(currentPage - 1)}
+                    disabled={currentPage === 1}
+                    className="px-3 py-1 text-sm border rounded disabled:opacity-50"
+                >
+                    Previous
+                </button>
+
+                <span className="text-sm">
+                Page {currentPage} of {totalPages}
+              </span>
+
+                <button
+                    onClick={() => onPageChange(currentPage + 1)}
+                    disabled={currentPage === totalPages}
+                    className="px-3 py-1 text-sm border rounded disabled:opacity-50"
+                >
+                    Next
+                </button>
+            </div>
+
         </div>
     )
 }
