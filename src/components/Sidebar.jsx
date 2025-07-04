@@ -11,7 +11,7 @@ const Sidebar = ({ menuItems }) => {
     const location = useLocation();
 
     return (
-        <div className="w-72 h-screen bg-white text-black flex flex-col p-4 shadow-lg rounded-r-lg">
+        <div className="w-72 h-screen bg-gray-800 text-white flex flex-col p-4 shadow-lg rounded-r-lg min-h-full h-auto">
             <div className="flex justify-center pb-5">
                 <img className="w-12 h-12" src={logo} alt="logo" />
             </div>
@@ -23,8 +23,8 @@ const Sidebar = ({ menuItems }) => {
                             to={path}
                             className={`flex items-center gap-3 px-3 py-2 rounded transition-all duration-200 ${
                                 location.pathname === path
-                                    ? 'bg-blue-600 text-white'
-                                    : 'hover:bg-blue-100 text-black'
+                                    ? 'bg-gray-600 text-white'
+                                    : 'hover:bg-gray-700 text-white'
                             }`}
                         >
                             {Icon ? <Icon size={18} /> : <span>❓</span>}
@@ -36,7 +36,7 @@ const Sidebar = ({ menuItems }) => {
                 <div className="pt-6">
                     <Link
                         to="/login"
-                        className={`flex items-center gap-3 px-3 py-2 rounded transition-all hover:bg-blue-100 text-black`}
+                        className={`flex items-center gap-3 px-3 py-2 rounded transition-all hover:bg-gray-700 text-white`}
                     >
                         <LogIn size={18} />
                         Logout

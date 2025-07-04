@@ -1,0 +1,257 @@
+import React, {useEffect, useState} from 'react';
+import {logoImg} from "../utils/index.js";
+import { ArrowLeft, Plus, Trash2, CheckCircle } from 'lucide-react';
+import {useLocation, useNavigate} from 'react-router-dom';
+
+
+const roomTypes = [
+    { type: 'Single', price: 5000 },
+    { type: 'Double', price: 8000 },
+    { type: 'Suite', price: 15000 },
+];
+
+const availableRooms = {
+    Single: ['101', '102'],
+    Double: ['201', '202'],
+    Suite: ['301'],
+};
+
+const idTypes = ['Driver’s License', 'Passport', 'National ID'];
+
+const CheckInForm = () => {
+    const [guest, setGuest] = useState({
+        name: '',
+        phone: '',
+        nextOfKin: '',
+        nextOfKinPhone: '',
+        idType: '',
+        idRef: '',
+    });
+
+    const [roomType, setRoomType] = useState('');
+    const [selectedRoom, setSelectedRoom] = useState('');
+    const [selectedRooms, setSelectedRooms] = useState([]);
+    const [numDays, setNumDays] = useState(1);
+    const [currentPrice, setCurrentPrice] = useState(0);
+    const [totalPrice, setTotalPrice] = useState(0);
+    const [paymentMethod, setPaymentMethod] = useState('');
+    const [discountCode, setDiscountCode] = useState('');
+
+    const handleAddRoom = () => {
+        if (!selectedRoom || !roomType) return;
+
+        const alreadySelected = selectedRooms.some(
+            (room) => room.room === selectedRoom
+        );
+
+        if (alreadySelected) {
+            alert("This room has already been selected.");
+            return;
+        }
+
+        const price = roomTypes.find((r) => r.type === roomType)?.price || 0;
+
+        const newRoom = {
+            type: roomType,
+            room: selectedRoom,
+            price,
+        };
+
+        setSelectedRooms([...selectedRooms, newRoom]);
+    };
+
+    useEffect(() => {
+        setTotalPrice(selectedRooms.reduce((sum, room) => sum + room.price, 0) * numDays);
+        setCurrentPrice(roomTypes.find(r => r.type === roomType)?.price || 0);
+    }, [selectedRoom, numDays, roomType, selectedRooms]);
+
+    const handleChange = (e) => {
+        setGuest({ ...guest, [e.target.name]: e.target.value });
+    };
+
+    const handleCheckIn = (e) => {
+        e.preventDefault();
+        console.log('Submitting Check-in:', { guest, selectedRooms, numDays, totalPrice });
+        // API call or logic here
+    };
+
+    const navigate = useNavigate();
+
+    const location = useLocation();
+    const reservationData = location.state?.reservation;
+
+    const paymentMethods = ["Card", "Cash", "Transfer"];
+
+    useEffect(() => {
+        if (reservationData) {
+            // Prefill guest info
+            setGuest({
+                name: reservationData.guestName || '',
+                phone: reservationData.guestPhone || '',
+                nextOfKin: reservationData.nextOfKin || '',
+                nextOfKinPhone: reservationData.nextOfKinPhone || '',
+                idType: reservationData.idType || '',
+                idRef: reservationData.idRef || ''
+            });
+
+            // Prefill room info
+            setRoomType(reservationData.roomType || '');
+            setSelectedRoom(reservationData.roomNumber || '');
+
+            // Optional: add room to selectedRooms if needed
+            if (reservationData.roomNumber && reservationData.roomType && reservationData.price) {
+                setSelectedRooms([
+                    {
+                        room: reservationData.roomNumber,
+                        type: reservationData.roomType,
+                        price: reservationData.price
+                    }
+                ]);
+            }
+
+            // Set number of days
+            setNumDays(reservationData.numDays || 1);
+
+            // Set total and current price
+            setCurrentPrice(reservationData.price || 0);
+            setTotalPrice((reservationData.price || 0) * (reservationData.numDays || 1));
+        }
+    }, [reservationData]);
+
+    return (
+        <div>
+            <div className="flex items-center pt-5 ps-5 space-x-2 mb-4 cursor-pointer" onClick={() => navigate(-1)}>
+                <ArrowLeft className="text-gray-700" />
+                <span className="text-sm text-gray-700">Back</span>
+            </div>
+
+            <div className="flex justify-center items-center px-8 py-3 w-full">
+                <form onSubmit={handleCheckIn} className="p-6 bg-white rounded-lg shadow-lg space-y-6 w-full">
+                    <div className="flex space-x-12 justify-start py-5">
+                        <img className="w-12 h-12" src={logoImg} alt="logo" />
+                        <div className="flex justify-center w-5/6">
+                            <h2 className="text-3xl font-semibold mb-4">Guest Check-In</h2>
+                        </div>
+                    </div>
+
+                    {/* Guest Details */}
+                    <div className="grid grid-cols-2 gap-4">
+                        <input name="name" value={guest.name} onChange={handleChange} placeholder="Guest Name" className="input blue-input" />
+                        <input name="phone" value={guest.phone} onChange={handleChange} placeholder="Phone Number" className="input blue-input" />
+                        <input name="nextOfKin" value={guest.nextOfKin} onChange={handleChange} placeholder="Next of Kin" className="input blue-input" />
+                        <input name="nextOfKinPhone" value={guest.nextOfKinPhone} onChange={handleChange} placeholder="Next of Kin Phone" className="input  blue-input" />
+                        <select name="idType" value={guest.idType} onChange={handleChange} className="input blue-input">
+                            <option value="">Select ID Type</option>
+                            {idTypes.map((id) => <option key={id}>{id}</option>)}
+                        </select>
+                        <input name="idRef" value={guest.idRef} onChange={handleChange} placeholder="ID Reference" className="input blue-input" />
+                    </div>
+
+                    {/* Room Selection */}
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <select value={roomType} onChange={(e) => setRoomType(e.target.value)} className="input blue-input">
+                            <option value="">Filter by Room Type</option>
+                            {roomTypes.map((r) => (
+                                <option key={r.type} value={r.type}>{r.type}</option>
+                            ))}
+                        </select>
+
+                        <select value={selectedRoom} onChange={(e) => setSelectedRoom(e.target.value)} className="input blue-input">
+                            <option value="">Select Room</option>
+                            {(availableRooms[roomType] || []).map((room) => (
+                                <option key={room} value={room}>{room}</option>
+                            ))}
+                        </select>
+
+                        <button type="button" onClick={handleAddRoom} className="bg-blue-600 text-white rounded px-4 py-2 w-1/2 hover:bg-blue-700">
+                            <div className="flex items-center space-x-3 justify-center">
+                                <Plus size={18} />
+                                <p>Add Room</p>
+                            </div>
+                        </button>
+                    </div>
+
+                    {/* Selected Rooms List */}
+                    {selectedRooms.length > 0 && (
+                        <div className="border p-4 rounded bg-gray-50">
+                            <h3 className="font-semibold mb-2">Selected Rooms:</h3>
+                            <ul className="list-disc list-inside space-y-1">
+                                {selectedRooms.map((room, idx) => (
+                                    <li key={idx} className="flex justify-between items-center bg-gray-100 p-2 rounded">
+                                        <span>{room.type} Room - #{room.room} - ₦{room.price.toLocaleString()}</span>
+                                        <button
+                                            type="button"
+                                            onClick={() =>
+                                                setSelectedRooms(selectedRooms.filter((_, i) => i !== idx))
+                                            }
+                                            className="text-red-500 hover:text-red-700"
+                                        >
+                                            <Trash2 size={18} />
+                                        </button>
+                                    </li>
+
+                                ))}
+                            </ul>
+                        </div>
+                    )}
+
+                    {/* Pricing */}
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4 items-end">
+                        <div>
+                            <label className="block text-sm mb-1">Room Type Price</label>
+                            <input value={`₦${currentPrice.toLocaleString()}`} disabled className="input bg-gray-100" />
+                        </div>
+                        <div>
+                            <label className="block text-sm mb-1">Total Price</label>
+                            <input value={`₦${totalPrice.toLocaleString()}`} disabled className="input bg-gray-100" />
+                        </div>
+                        <div>
+                            <label className="block text-sm mb-1">Number of Days</label>
+                            <input
+                                type="number"
+                                min={1}
+                                value={numDays}
+                                onChange={(e) => setNumDays(Number(e.target.value))}
+                                className="input bg-blue-50 px-3"
+                            />
+                        </div>
+                    </div>
+
+                    <div className="flex items-center space-x-5 py-6">
+                        <div className="flex flex-col items-start">
+                            <label className="block mb-2">Payment Method</label>
+                            <select
+                                className="input border mb-5"
+                                value={paymentMethod}
+                                onChange={(e) => setPaymentMethod(e.target.value)}
+                            >
+                                <option value="">-- Select Room --</option>
+                                {paymentMethods.map((item) => (
+                                    <option key={item} value={item}>
+                                        {item}
+                                    </option>
+                                ))}
+                            </select>
+                        </div>
+
+                        <input name="Discount" value={discountCode} onChange={setDiscountCode} placeholder="Discount Code" className="input blue-input" />
+                    </div>
+
+
+                    {/* Check-In Button */}
+                    <div className="flex justify-end">
+                        <button type="submit" className="bg-green-600 text-white rounded px-6 py-2 w-max hover:bg-green-700 transition">
+                            <div className="flex items-center space-x-3 justify-center">
+                                <CheckCircle size={18} />
+                                <p>Check-In</p>
+                            </div>
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+    );
+};
+
+export default CheckInForm;
