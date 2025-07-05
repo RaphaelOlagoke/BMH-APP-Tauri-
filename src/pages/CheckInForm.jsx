@@ -2,6 +2,7 @@ import React, {useEffect, useState} from 'react';
 import {logoImg} from "../utils/index.js";
 import { ArrowLeft, Plus, Trash2, CheckCircle } from 'lucide-react';
 import {useLocation, useNavigate} from 'react-router-dom';
+import ConfirmModal from "../components/ConfirmModal.jsx";
 
 
 const roomTypes = [
@@ -37,6 +38,9 @@ const CheckInForm = () => {
     const [paymentMethod, setPaymentMethod] = useState('');
     const [discountCode, setDiscountCode] = useState('');
 
+    const [showConfirm, setShowConfirm] = useState(false);
+    const [showMissingFields, setShowMissingFields] = useState(false);
+
     const handleAddRoom = () => {
         if (!selectedRoom || !roomType) return;
 
@@ -71,8 +75,23 @@ const CheckInForm = () => {
 
     const handleCheckIn = (e) => {
         e.preventDefault();
+
+        if (
+            !guest.name ||
+            !guest.phone ||
+            !selectedRooms ||
+            !numDays ||
+            !paymentMethod
+        ) {
+            setShowMissingFields(true);
+        }
+        else{
+            setShowConfirm(true);
+        }
+    };
+
+    const confirmSubmission = () => {
         console.log('Submitting Check-in:', { guest, selectedRooms, numDays, totalPrice });
-        // API call or logic here
     };
 
     const navigate = useNavigate();
@@ -86,28 +105,37 @@ const CheckInForm = () => {
         if (reservationData) {
             // Prefill guest info
             setGuest({
-                name: reservationData.guestName || '',
-                phone: reservationData.guestPhone || '',
+                name: reservationData.name || '',
+                phone: reservationData.phone || '',
                 nextOfKin: reservationData.nextOfKin || '',
                 nextOfKinPhone: reservationData.nextOfKinPhone || '',
                 idType: reservationData.idType || '',
                 idRef: reservationData.idRef || ''
             });
 
+
             // Prefill room info
             setRoomType(reservationData.roomType || '');
             setSelectedRoom(reservationData.roomNumber || '');
 
             // Optional: add room to selectedRooms if needed
-            if (reservationData.roomNumber && reservationData.roomType && reservationData.price) {
-                setSelectedRooms([
-                    {
-                        room: reservationData.roomNumber,
-                        type: reservationData.roomType,
-                        price: reservationData.price
-                    }
-                ]);
-            }
+            const newSelectedRooms = reservationData.roomList.map((room) => ({
+                room: room.number,
+                type: room.type,
+                price: room.price
+            }));
+
+            setSelectedRooms(newSelectedRooms);
+
+            // if (reservationData.rooms && reservationData.roomTypes && reservationData.price) {
+            //     setSelectedRooms([
+            //         {
+            //             room: reservationData.roomNumber,
+            //             type: reservationData.roomType,
+            //             price: reservationData.price
+            //         }
+            //     ]);
+            // }
 
             // Set number of days
             setNumDays(reservationData.numDays || 1);
@@ -247,8 +275,25 @@ const CheckInForm = () => {
                             </div>
                         </button>
                     </div>
+
                 </form>
             </div>
+            {/* ✅ Confirm Modal */}
+            {showConfirm && (
+                <ConfirmModal
+                    message="Confirm Check-In?"
+                    onConfirm={confirmSubmission}
+                    onCancel={() => setShowConfirm(false)}
+                />
+            )}
+
+            {/* ✅ Missing Fields Modal */}
+            {showMissingFields && (
+                <ConfirmModal
+                    message="Please fill all required fields"
+                    onCancel={() => setShowMissingFields(false)}
+                />
+            )}
         </div>
 
     );

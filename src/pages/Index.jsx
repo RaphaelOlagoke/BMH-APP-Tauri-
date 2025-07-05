@@ -18,26 +18,18 @@ import {
 } from 'lucide-react';
 import Header from "../components/Header.jsx";
 import InfoMenu from "../components/InfoMenu.jsx";
-import {availableRoomsImg, maintenanceRoomsImg, needsCleaningRoomsImg, occupiedRoomsImg} from "../utils/index.js";
+import {
+    availableRoomsImg,
+    maintenanceRoomsImg,
+    menuItems,
+    needsCleaningRoomsImg,
+    occupiedRoomsImg
+} from "../utils/index.js";
 import Table from "../components/Table.jsx";
 import GuestLogsFilterForm from "../components/GuestLogsFilterForm.jsx";
 import {Link, useNavigate} from "react-router-dom";
 
-const menuItems = [
-    { label: 'Guest Logs', icon: FileText, path: '/' },
-    { label: 'Room Reservation', icon: BedDouble, path: '/room-reservation' },
-    { label: 'Hall Reservation', icon: CalendarDays, path: '/hall-reservation' },
-    { label: 'Rooms', icon: Building2, path: '/rooms' },
-    { label: 'Room Service', icon: ClipboardList, path: '/room-service' },
-    { label: 'Inventory', icon: ClipboardList, path: '/inventory' },
-    { label: 'Restaurant & Bar', icon: Utensils, path: '/restaurant-bar' },
-    { label: 'House Keeping', icon: Sparkles, path: '/house-keeping' },
-    { label: 'Invoice', icon: FileText, path: '/invoice' },
-    { label: 'Refund', icon: RotateCcw, path: '/refund' },
-    { label: 'Discount', icon: Percent, path: '/discount' },
-    { label: 'Settings', icon: Settings, path: '/settings' },
-    { label: 'Users', icon: Users, path: '/users' },
-];
+
 
 const roomsList = [
     { label: 'Available rooms', image: availableRoomsImg, count: "44" , value: ""},
@@ -87,25 +79,40 @@ const Index = () => {
             paymentStatus: "paid",
             invoices: [
                 {
-                    serviceType: 'Room Service',
-                    status: 'Paid',
-                    date: '2025-07-04',
+                    ref: "INV-1001",
+                    issueDate: "2025-06-20T09:00:00",
+                    paymentDate: "2025-06-22T12:00:00",
+                    totalAmount: 200000,
+                    paymentStatus: "PAID",
+                    paymentMethod: "BANK_TRANSFER",
+                    service: "HALL_RENTAL",
+                    serviceDetails: "Full-day rental of Grand Ballroom",
+                    discountCode: "WEDDING10",
+                    discountPercentage: 10,
+                    discountAmount: 20000,
+                    amountPaid: 180000,
                     items: [
-                        { name: 'Water', price: 200, quantity: 2 },
-                        { name: 'Food', price: 1000, quantity: 1 },
-                    ],
-                    discount: 500,
-                    subtotal: 2400,
-                    amountPaid: 2400,
+                        {
+                            name: "Hall Rental",
+                            quantity: 1,
+                            price: 200000
+                        }
+                    ]
                 },
                 {
-                    serviceType: 'Laundry',
-                    status: 'Unpaid',
-                    date: '2025-07-03',
-                    items: [],
-                    discount: 0,
-                    subtotal: 1000,
-                    amountPaid: 0,
+                    ref: "INV-1002",
+                    issueDate: "2025-06-20T09:00:00",
+                    paymentDate: "2025-06-22T12:00:00",
+                    totalAmount: 200000,
+                    paymentStatus: "PAID",
+                    paymentMethod: "BANK_TRANSFER",
+                    service: "HALL_RENTAL",
+                    serviceDetails: "Full-day rental of Grand Ballroom",
+                    discountCode: "",
+                    discountPercentage: 0,
+                    discountAmount: 0,
+                    amountPaid: 200000,
+                    items: []
                 },
             ],
         },
@@ -136,7 +143,7 @@ const Index = () => {
             checkInDate: "2025-07-02",
             checkoutDate: "2025-07-07",
             phone: "09012345678",
-            nextOfKin: "Peter Johnson",
+            nextOfKin: "Dave Johnson",
             nextOfKinPhone: "09098765432",
             idType: "Passport",
             idRef: "A123456789",
@@ -167,6 +174,7 @@ const Index = () => {
     //             return 'text-gray-800 bg-gray-100';
     //     }
     // };
+
 
     const totalPages = 20;
 

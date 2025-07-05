@@ -11,7 +11,7 @@ const Sidebar = ({ menuItems }) => {
     const location = useLocation();
 
     return (
-        <div className="w-72 h-screen bg-gray-800 text-white flex flex-col p-4 shadow-lg rounded-r-lg min-h-full h-auto">
+        <div className="w-72  bg-gray-800 text-white flex flex-col p-4 shadow-lg rounded-r-lg min-h-full ">
             <div className="flex justify-center pb-5">
                 <img className="w-12 h-12" src={logo} alt="logo" />
             </div>

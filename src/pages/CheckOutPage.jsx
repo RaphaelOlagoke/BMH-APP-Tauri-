@@ -3,9 +3,9 @@ import React, { useState, useEffect } from 'react';
 import RoomListCheckbox from '../components/RoomListCheckbox';
 import GuestSummary from '../components/GuestSummary';
 import InvoiceModal from '../components/InvoiceModal';
-import {ArrowLeft} from "lucide-react";
 import {logoImg} from "../utils/index.js";
-import {useNavigate} from "react-router-dom";
+import ConfirmModal from "../components/ConfirmModal.jsx";
+import BackButton from "../components/BackButton.jsx";
 
 const dummyData = {
     occupiedRooms: ['101', '102', '103'],
@@ -62,6 +62,9 @@ const CheckoutPage = () => {
     const [guest, setGuest] = useState(null);
     const [invoices, setInvoices] = useState([]);
 
+    const [showConfirm, setShowConfirm] = useState(false);
+    const [showMissingFields, setShowMissingFields] = useState(false);
+
     useEffect(() => {
         if (selectedRoom && dummyData.roomGroups[selectedRoom]) {
             setGroupedRooms(dummyData.roomGroups[selectedRoom]);
@@ -85,18 +88,24 @@ const CheckoutPage = () => {
 
     const handleCheckOut = (e) => {
         e.preventDefault();
-        console.log('Submitting Check-in:');
-        // API call or logic here
+        if (
+            selectedRooms.length === 0
+        ) {
+            setShowMissingFields(true);
+        }
+        else{
+            setShowConfirm(true);
+        }
     };
 
-    const navigate = useNavigate();
+    const confirmSubmission = () => {
+        console.log('Submitting Check-Out:', { guest, selectedRooms});
+        setShowConfirm(false);
+    };
 
     return (
         <div>
-            <div className="flex items-center pt-5 ps-5 space-x-2 mb-4 cursor-pointer" onClick={() => navigate(-1)}>
-                <ArrowLeft className="text-gray-700" />
-                <span className="text-sm text-gray-700">Back</span>
-            </div>
+            <BackButton/>
 
             <div className="flex justify-center items-center px-8 py-3 w-full">
                 <form onSubmit={handleCheckOut} className="p-6 bg-white rounded-lg shadow-lg space-y-6 w-full">
@@ -167,7 +176,7 @@ const CheckoutPage = () => {
                         {guest && (
                             <div className="">
                                 <button
-                                    onClick={() => alert('Check-out successful!')}
+                                    onClick={() => handleCheckOut()}
                                     className="bg-green-600 text-white px-6 py-3 rounded hover:bg-green-700"
                                 >
                                     Confirm Check-Out
@@ -175,16 +184,32 @@ const CheckoutPage = () => {
                             </div>
                         )}
                     </div>
-
-
-                    {showInvoice && (
-                        <InvoiceModal
-                            invoices={invoices}
-                            onClose={() => setShowInvoice(false)}
-                        />
-                    )}
                 </form>
             </div>
+            {showInvoice && (
+                <InvoiceModal
+                    invoices={invoices}
+                    onClose={() => setShowInvoice(false)}
+                />
+            )}
+
+            {/* ✅ Confirm Modal */}
+            {showConfirm && (
+                <ConfirmModal
+                    message="Confirm Check-Out?"
+                    onConfirm={confirmSubmission}
+                    onCancel={() => setShowConfirm(false)}
+                />
+            )}
+
+            {/* ✅ Missing Fields Modal */}
+            {showMissingFields && (
+                <ConfirmModal
+                    message="No room selected"
+                    onCancel={() => setShowMissingFields(false)}
+                />
+            )}
+
         </div>
     );
 };

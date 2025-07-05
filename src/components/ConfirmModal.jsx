@@ -5,7 +5,7 @@ const ConfirmModal = ({ message, onConfirm, onCancel }) => {
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
             <div className="bg-white p-6 rounded shadow-lg max-w-sm w-full">
                 <h3 className="text-lg font-semibold mb-4">Confirm Action</h3>
-                <p className="text-gray-700">{message}</p>
+                <p className="text-gray-700 text-xl">{message}</p>
                 <div className="mt-4 flex justify-end gap-3">
                     <button
                         onClick={onCancel}

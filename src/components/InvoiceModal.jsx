@@ -14,14 +14,14 @@ const InvoiceModal = ({ invoices, onClose }) => {
 
 
     const totalOutstanding = invoices.reduce(
-        (sum, invoice) => sum + (invoice.subtotal - invoice.amountPaid),
+        (sum, invoice) => sum + (invoice.totalAmount - invoice.amountPaid),
         0
     );
 
     const paymentMethods = ["Card", "Cash", "Transfer"]
 
     return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 text-[15px]">
         <div className="bg-white p-6 rounded shadow-lg w-full max-w-2xl overflow-auto max-h-[80vh]">
             <div className="flex justify-between items-center mb-4">
                 <h2 className="text-xl font-semibold">Invoice Detail</h2>
@@ -76,17 +76,19 @@ const InvoiceModal = ({ invoices, onClose }) => {
 
             {invoices.map((invoice) => (
                 <div className="text-start">
-                    <p><strong>Service Type:</strong> {invoice.serviceType}</p>
+                    <p><strong>Service Type:</strong> {invoice.service}</p>
+                    <p><strong>Service Description:</strong> {invoice.serviceDetails}</p>
                     <div className="flex items-center gap-4 py-2">
                         <p className="text-sm">
                             <strong>Status:</strong>
                         </p>
                         <span className={`text-xs font-medium px-2 py-1 rounded-full
-                                ${invoice.status === 'Paid' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
-                                {invoice.status}
+                                ${invoice.paymentStatus.toLocaleLowerCase() === 'paid' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
+                                {invoice.paymentStatus}
                             </span>
                     </div>
-                    <p><strong>Date:</strong> {invoice.date}</p>
+                    <p><strong>Issue Date:</strong> {invoice.issueDate}</p>
+                    <p><strong>Payment Date:</strong> {invoice.paymentDate}</p>
 
                     {invoice.items.length > 0 ? (
                         <table className="min-w-full mt-4 text-sm text-left border">
@@ -112,8 +114,10 @@ const InvoiceModal = ({ invoices, onClose }) => {
                     )}
 
                     <div className="mt-4">
-                        <p><strong>Discount:</strong> ₦{invoice.discount}</p>
-                        <p className="py-2"><strong>Subtotal:</strong> ₦{invoice.subtotal}</p>
+                        {invoice.discountCode && (<p><strong>Discount:</strong> ₦{invoice.discount}</p>)}
+                        {invoice.discountCode && (<p><strong>Discount Code:</strong> {invoice.discountCode}</p>)}
+                        {invoice.discountCode && (<p><strong>Discount Percentage:</strong> {invoice.discountPercentage}%</p>)}
+                        <p className="py-2"><strong>Subtotal:</strong> ₦{invoice.totalAmount}</p>
                         <p><strong>Amount Paid:</strong> ₦{invoice.amountPaid}</p>
                     </div>
 

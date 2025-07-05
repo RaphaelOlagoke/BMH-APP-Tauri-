@@ -3,6 +3,10 @@ import {MoreVertical, BedDouble, PlusCircle, Repeat, Replace, ArrowLeft} from "l
 import {useLocation, useParams} from "react-router-dom";
 import InvoiceModal from "../components/InvoiceModal.jsx";
 import BackButton from "../components/BackButton.jsx";
+import RoomServiceModal from "../components/RoomServiceModal.jsx";
+import AddRoom from "../Modals/AddRoom.jsx";
+import ChangeRoom from "../Modals/ChangeRoom.jsx";
+import ExtendStay from "../Modals/ExtendStay.jsx";
 
 const statusStyles = {
     active: "bg-green-100 text-green-800",
@@ -14,7 +18,10 @@ const paymentStatusStyles = {
     unpaid: "bg-red-100 text-red-800",
 };
 
-
+const handleChargeServices = (servicesCharged) => {
+    console.log("Charged services:", servicesCharged);
+    // You can send this data to API or update local state
+};
 
 const SingleGuestLog = () => {
     const { state } = useLocation();
@@ -27,11 +34,30 @@ const SingleGuestLog = () => {
     const guest = state?.guest || {};
 
 // Dummy functions for room actions
-    const onAddRoom = () => alert("Add Room for " + guest.name);
-    const onChangeRoom = () => alert("Change Room for " + guest.name);
-    const onExtendStay = () => alert("Extend Stay for " + guest.name);
-    const onRoomServiceClick = () => alert("Room Service for " + guest.name);
+    const onAddRoom = () => {
+        setShowAddRoom(true);
+    };
+    const onChangeRoom = () => {
+        setChangeRoom(true);
+    };
+    const onExtendStay = () => {
+        setExtendStay(true);
+    };
 
+    const [showRoomServiceModal, setShowRoomServiceModal] = useState(false);
+    const [showAddRoom, setShowAddRoom] = useState(false);
+    const [showExtendStay, setExtendStay] = useState(false);
+    const [showChangeRoom, setChangeRoom] = useState(false);
+
+    const roomTypes=[
+            { type: 'Standard', price: 15000 },
+        { type: 'Deluxe', price: 25000 },
+    ]
+    const availableRooms={
+        Standard: ['101', '102', '103'],
+            Deluxe: ['201', '202'],
+    }
+    const currentRooms = ['101', '102']
 
     return (
         <div className="p-6 max-w-5xl mx-auto">
@@ -119,7 +145,7 @@ const SingleGuestLog = () => {
 
                 { guest.status === "active" && (
                     <button
-                        onClick={onRoomServiceClick}
+                        onClick={() => setShowRoomServiceModal(true)}
                         className="bg-green-600 text-white px-6 py-3 rounded hover:bg-green-700 flex items-center gap-2"
                     >
                         <BedDouble size={18} />
@@ -127,9 +153,39 @@ const SingleGuestLog = () => {
                     </button>
                 )}
 
+                {showRoomServiceModal && (
+                    <RoomServiceModal
+                        onClose={() => setShowRoomServiceModal(false)}
+                        onCharge={handleChargeServices}
+                    />
+                )}
+
             </div>
+            {showAddRoom && (
+                <AddRoom
+                    roomTypes={roomTypes}
+                    availableRooms={availableRooms}
+                    onClose={() => setShowAddRoom(false)}
+                />
+            )}
+
+            {showChangeRoom && (
+                <ChangeRoom
+                    currentRooms={currentRooms}
+                    roomTypes={roomTypes}
+                    availableRooms={availableRooms}
+                    onClose={() => setChangeRoom(false)}
+                />
+            )}
+
+            {showExtendStay && (
+                <ExtendStay
+                    onClose={() => setExtendStay(false)}
+                />
+            )}
         </div>
     );
 };
 
 export default SingleGuestLog;
+
