@@ -5,6 +5,11 @@ import availableRooms from "/assets/images/availableRooms.png";
 import occupiedRooms from "/assets/images/occupiedRooms.png";
 import needsCleaningRooms from "/assets/images/needsCleaningRooms.png";
 import maintenanceRooms from "/assets/images/maintenance.png";
+import paid from "/assets/images/paid.png";
+import unpaid from "/assets/images/unpaid.png";
+import expenses from "/assets/images/expenses.png";
+import sync from "/assets/images/sync.png";
+
 import {
     BedDouble,
     Building2,
@@ -26,6 +31,12 @@ export const needsCleaningRoomsImg = needsCleaningRooms;
 export const maintenanceRoomsImg = maintenanceRooms;
 
 
+export const paidInvoiceImg = paid;
+export const unpaidInvoiceImg = unpaid;
+export const expensesInvoiceImg = expenses;
+export const syncInvoiceImg = sync;
+
+
 export const menuItems = [
     { label: 'Guest Logs', icon: FileText, path: '/' },
     { label: 'Room Reservation', icon: BedDouble, path: '/room-reservation' },
@@ -36,7 +47,7 @@ export const menuItems = [
     { label: 'Restaurant & Bar', icon: Utensils, path: '/restaurant-bar' },
     { label: 'House Keeping', icon: Sparkles, path: '/house-keeping' },
     { label: 'Invoice', icon: FileText, path: '/invoice' },
-    { label: 'Refund', icon: RotateCcw, path: '/refund' },
+    // { label: 'Refund', icon: RotateCcw, path: '/refund' },
     { label: 'Discount', icon: Percent, path: '/discount' },
     { label: 'Settings', icon: Settings, path: '/settings' },
     { label: 'Users', icon: Users, path: '/users' },

@@ -16,6 +16,11 @@ import SingleRoom from "./pages/SingleRoom.jsx";
 import RoomService from "./pages/RoomService.jsx";
 import Inventory from "./pages/Inventory.jsx";
 import InventoryHistory from "./pages/InventoryHistory.jsx";
+import HouseKeeping from "./pages/HouseKeeping.jsx";
+import Invoice from "./pages/Invoice.jsx";
+import Discount from "./pages/Discount.jsx";
+import User from "./pages/User.jsx";
+import SettingsPage from "./pages/SettingsPage.jsx";
 
 ReactDOM.createRoot(document.getElementById('root')).render(
     <HashRouter>
@@ -33,6 +38,11 @@ ReactDOM.createRoot(document.getElementById('root')).render(
             <Route path="/room-service" element={<RoomService />} />
             <Route path="/inventory" element={<Inventory />} />
             <Route path="/inventory-history" element={<InventoryHistory />} />
+            <Route path="/house-keeping" element={<HouseKeeping />} />
+            <Route path="/invoice" element={<Invoice />} />
+            <Route path="/discount" element={<Discount />} />
+            <Route path="/users" element={<User />} />
+            <Route path="/settings" element={<SettingsPage />} />
         </Routes>
     </HashRouter>
 );
