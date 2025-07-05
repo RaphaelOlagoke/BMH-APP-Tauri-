@@ -1,11 +1,11 @@
 import React from 'react';
 
-const DateFilter = ({ startDate, endDate, setStartDate, setEndDate }) => {
+const DateFilter = ({ startDate, endDate, setStartDate, setEndDate, startTitle="Start Date", endTitle="End Date" }) => {
     return (
         <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
             {/* Start Date */}
             <div className="flex flex-col">
-                <label className="text-sm font-medium mb-1" htmlFor="start-date">Start Date</label>
+                <label className="text-sm font-medium mb-1" htmlFor="start-date">{startTitle}</label>
                 <input
                     id="start-date"
                     type="date"
@@ -17,7 +17,7 @@ const DateFilter = ({ startDate, endDate, setStartDate, setEndDate }) => {
 
             {/* End Date */}
             <div className="flex flex-col">
-                <label className="text-sm font-medium mb-1" htmlFor="end-date">End Date</label>
+                <label className="text-sm font-medium mb-1" htmlFor="end-date">{endTitle}</label>
                 <input
                     id="end-date"
                     type="date"

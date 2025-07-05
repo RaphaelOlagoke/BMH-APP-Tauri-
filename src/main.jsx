@@ -14,6 +14,8 @@ import SingleHallReservation from "./pages/SingleHallReservation.jsx";
 import Rooms from "./pages/Rooms.jsx";
 import SingleRoom from "./pages/SingleRoom.jsx";
 import RoomService from "./pages/RoomService.jsx";
+import Inventory from "./pages/Inventory.jsx";
+import InventoryHistory from "./pages/InventoryHistory.jsx";
 
 ReactDOM.createRoot(document.getElementById('root')).render(
     <HashRouter>
@@ -29,6 +31,8 @@ ReactDOM.createRoot(document.getElementById('root')).render(
             <Route path="/rooms" element={<Rooms />} />
             <Route path="/rooms/:id" element={<SingleRoom />} />
             <Route path="/room-service" element={<RoomService />} />
+            <Route path="/inventory" element={<Inventory />} />
+            <Route path="/inventory-history" element={<InventoryHistory />} />
         </Routes>
     </HashRouter>
 );
