@@ -1,25 +1,15 @@
 import React, {useEffect, useState} from 'react';
-import {logoImg} from "../utils/index.js";
+import {getData, logoImg, postData, roomList} from "../utils/index.js";
 import { ArrowLeft, Plus, Trash2, CheckCircle } from 'lucide-react';
 import {useLocation, useNavigate} from 'react-router-dom';
 import ConfirmModal from "../components/ConfirmModal.jsx";
+import LoadingScreen from "../components/LoadingScreen.jsx";
 
 
-const roomTypes = [
-    { type: 'Single', price: 5000 },
-    { type: 'Double', price: 8000 },
-    { type: 'Suite', price: 15000 },
-];
-
-const availableRooms = {
-    Single: ['101', '102'],
-    Double: ['201', '202'],
-    Suite: ['301'],
-};
-
-const idTypes = ['Driver’s License', 'Passport', 'National ID'];
+const idTypes = ['DRIVER_LICENSE', 'NIN', 'PASSPORT', 'VOTER_CARD'];
 
 const CheckInForm = () => {
+
     const [guest, setGuest] = useState({
         name: '',
         phone: '',
@@ -40,6 +30,65 @@ const CheckInForm = () => {
 
     const [showConfirm, setShowConfirm] = useState(false);
     const [showMissingFields, setShowMissingFields] = useState(false);
+    const [modalMessage, setModalMessage] = useState("");
+    const navigate = useNavigate();
+
+    const [roomTypes, setRoomTypes] = useState([]);
+    const [availableRooms, setAvailableRooms] = useState({});
+    const [loading, setLoading] = useState(false);
+    const [showSuccessModal, setShowSuccessModal] = useState(false);
+
+    useEffect(() => {
+        const fetchRooms = async () => {
+            const roomDtoList = await roomList(navigate);
+
+            const roomPriceData = await getData("/roomPrices/all",navigate)
+            if(!roomPriceData  || !roomDtoList){
+                setModalMessage("Something went wrong!");
+                setShowMissingFields(true);
+                return;
+            }
+
+            const roomPriceMap = {
+                EXECUTIVE_SUITE: roomPriceData.executiveSuitePrice,
+                BUSINESS_SUITE_A: roomPriceData.businessSuiteAPrice,
+                BUSINESS_SUITE_B: roomPriceData.businessSuiteBPrice,
+                EXECUTIVE_DELUXE: roomPriceData.executiveDeluxePrice,
+                DELUXE: roomPriceData.deluxePrice,
+                CLASSIC: roomPriceData.classicPrice,
+            };
+
+            const roomTypesSet = new Set();
+            const tempAvailableRooms = {};
+
+            roomDtoList?.forEach(room => {
+                const type = room.roomType;
+
+                if (!roomPriceMap[type]) return;
+
+                roomTypesSet.add(type);
+
+                if (room.roomStatus === "AVAILABLE") {
+                    if (!tempAvailableRooms[type]) {
+                        tempAvailableRooms[type] = [];
+                    }
+                    tempAvailableRooms[type].push(String(room.roomNumber));
+                }
+            });
+
+            const roomTypesArray = Array.from(roomTypesSet).map(type => ({
+                type,
+                price: roomPriceMap[type]
+            }));
+
+            setRoomTypes(roomTypesArray);
+            setAvailableRooms(tempAvailableRooms);
+        };
+
+        fetchRooms();
+    }, []);
+
+
 
     const handleAddRoom = () => {
         if (!selectedRoom || !roomType) return;
@@ -49,7 +98,8 @@ const CheckInForm = () => {
         );
 
         if (alreadySelected) {
-            alert("This room has already been selected.");
+            setModalMessage("This room has already been selected.")
+            setShowMissingFields(true);
             return;
         }
 
@@ -67,7 +117,7 @@ const CheckInForm = () => {
     useEffect(() => {
         setTotalPrice(selectedRooms.reduce((sum, room) => sum + room.price, 0) * numDays);
         setCurrentPrice(roomTypes.find(r => r.type === roomType)?.price || 0);
-    }, [selectedRoom, numDays, roomType, selectedRooms]);
+    }, [selectedRoom, numDays, roomType, selectedRooms, roomTypes]);
 
     const handleChange = (e) => {
         setGuest({ ...guest, [e.target.name]: e.target.value });
@@ -81,8 +131,10 @@ const CheckInForm = () => {
             !guest.phone ||
             !selectedRooms ||
             !numDays ||
-            !paymentMethod
+            !paymentMethod ||
+            selectedRooms.length === 0
         ) {
+            setModalMessage("Please fill all required fields")
             setShowMissingFields(true);
         }
         else{
@@ -90,16 +142,44 @@ const CheckInForm = () => {
         }
     };
 
-    const confirmSubmission = () => {
-        console.log('Submitting Check-in:', { guest, selectedRooms, numDays, totalPrice });
+    const confirmSubmission = async () => {
+        setShowConfirm(false);
+        setLoading(true);
+        const checkInRequest = {
+            guestName: guest.name,
+            roomNumbers: selectedRooms.map(r => r.room),
+            paymentMethod: paymentMethod,
+            discountCode: discountCode,
+            noOfDays: numDays,
+            idType: guest.idType,
+            idRef: guest.idRef,
+            nextOfKinName: guest.nextOfKin,
+            nextOfKinNumber: guest.nextOfKinPhone,
+            phoneNumber: guest.phone
+        };
+        console.log(checkInRequest);
+        const res = await postData("/guestLog/", checkInRequest, navigate);
+        console.log("res",res)
+        setLoading(false);
+        if (res) {
+            setShowSuccessModal(true);
+        }
+        else{
+            setModalMessage("Something went wrong!");
+            setShowMissingFields(true);
+        }
+
     };
 
-    const navigate = useNavigate();
+    const onSuccess = () => {
+        setShowSuccessModal(false)
+        navigate("/home")
+    }
 
     const location = useLocation();
     const reservationData = location.state?.reservation;
 
-    const paymentMethods = ["Card", "Cash", "Transfer"];
+    const paymentMethods = ["CARD", "CASH", "TRANSFER"];
 
     useEffect(() => {
         if (reservationData) {
@@ -148,6 +228,7 @@ const CheckInForm = () => {
 
     return (
         <div>
+            {loading && <LoadingScreen />}
             <div className="flex items-center pt-5 ps-5 space-x-2 mb-4 cursor-pointer" onClick={() => navigate(-1)}>
                 <ArrowLeft className="text-gray-700" />
                 <span className="text-sm text-gray-700">Back</span>
@@ -290,8 +371,16 @@ const CheckInForm = () => {
             {/* ✅ Missing Fields Modal */}
             {showMissingFields && (
                 <ConfirmModal
-                    message="Please fill all required fields"
+                    message={modalMessage}
                     onCancel={() => setShowMissingFields(false)}
+                />
+            )}
+
+            {/* ✅ On Successful */}
+            {showSuccessModal && (
+                <ConfirmModal
+                    message="Check In Successful!"
+                    onCancel={() => onSuccess()}
                 />
             )}
         </div>

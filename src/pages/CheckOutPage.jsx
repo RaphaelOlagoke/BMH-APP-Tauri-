@@ -3,56 +3,13 @@ import React, { useState, useEffect } from 'react';
 import RoomListCheckbox from '../components/RoomListCheckbox';
 import GuestSummary from '../components/GuestSummary';
 import InvoiceModal from '../components/InvoiceModal';
-import {logoImg} from "../utils/index.js";
+import {getData, logoImg} from "../utils/index.js";
 import ConfirmModal from "../components/ConfirmModal.jsx";
 import BackButton from "../components/BackButton.jsx";
+import LoadingScreen from "../components/LoadingScreen.jsx";
+import {useNavigate} from "react-router-dom";
+import restClient from "../utils/restClient.js";
 
-const dummyData = {
-    occupiedRooms: ['101', '102', '103'],
-    roomGroups: {
-        '101': ['101', '104'],
-        '102': ['102'],
-        '103': ['103', '105'],
-    },
-    guests: {
-        '101': {
-            name: 'John Doe',
-            phone: '08012345678',
-            totalPaid: 45000,
-            balance: 15000,
-            invoices: [
-                {
-                    serviceType: 'Room Service',
-                    status: 'Paid',
-                    date: '2025-07-04',
-                    items: [
-                        { name: 'Water', price: 200, quantity: 2 },
-                        { name: 'Food', price: 1000, quantity: 1 },
-                    ],
-                    discount: 500,
-                    subtotal: 2400,
-                    amountPaid: 2400,
-                },
-                {
-                    serviceType: 'Laundry',
-                    status: 'Unpaid',
-                    date: '2025-07-03',
-                    items: [],
-                    discount: 0,
-                    subtotal: 1000,
-                    amountPaid: 0,
-                },
-            ],
-        },
-        '102': {
-            name: 'Jane Smith',
-            phone: '08087654321',
-            totalPaid: 60000,
-            balance: 0,
-            invoices: [],
-        },
-    },
-};
 
 const CheckoutPage = () => {
     const [selectedRoom, setSelectedRoom] = useState('');
@@ -64,19 +21,55 @@ const CheckoutPage = () => {
 
     const [showConfirm, setShowConfirm] = useState(false);
     const [showMissingFields, setShowMissingFields] = useState(false);
+    const [occupiedRooms, setOccupiedRooms] = useState([]);
+    const [modalMessage, setModalMessage] = useState("");
+    const [loading, setLoading] = useState(false);
+    const [showSuccessModal, setShowSuccessModal] = useState(false);
+    const navigate = useNavigate();
 
     useEffect(() => {
-        if (selectedRoom && dummyData.roomGroups[selectedRoom]) {
-            setGroupedRooms(dummyData.roomGroups[selectedRoom]);
-            setSelectedRooms(dummyData.roomGroups[selectedRoom]);
-            const guestData = dummyData.guests[selectedRoom];
-            if (guestData) {
-                setGuest(guestData);
-                setInvoices(guestData.invoices);
-            } else {
-                setGuest(null);
-                setInvoices([]);
+        setLoading(true);
+        const fetchRooms = async () => {
+            const roomData = await getData("/room/status?roomStatus=OCCUPIED");
+            setLoading(false);
+            if(!roomData){
+                setModalMessage("Something went wrong!");
+                setShowMissingFields(true);
+                return;
             }
+            setOccupiedRooms(roomData.map(room => room.roomNumber));
+        };
+
+        fetchRooms();
+    }, []);
+
+    useEffect(() => {
+        const fetchGuestData = async () => {
+            setLoading(true);
+            const guestData = await getData(`/guestLog/find?roomNumber=${parseInt(selectedRoom)}`);
+
+            setLoading(false);
+            if(!guestData){
+                setModalMessage("Something went wrong!");
+                setShowMissingFields(true);
+                return;
+            }
+            setGuest(guestData);
+            setInvoices(guestData.invoices);
+            setSelectedRooms(
+                guestData.guestLogRooms
+                    .filter(r => r.guestLogStatus === "ACTIVE")
+                    .map(r => r.room.roomNumber)
+            );
+            setGroupedRooms(
+                guestData.guestLogRooms
+                    .filter(r => r.guestLogStatus === "ACTIVE")
+                    .map(r => r.room.roomNumber)
+            );
+        };
+
+        if(selectedRoom){
+            fetchGuestData();
         }
     }, [selectedRoom]);
 
@@ -91,6 +84,7 @@ const CheckoutPage = () => {
         if (
             selectedRooms.length === 0
         ) {
+            setModalMessage("No rooms selected!");
             setShowMissingFields(true);
         }
         else{
@@ -98,13 +92,45 @@ const CheckoutPage = () => {
         }
     };
 
-    const confirmSubmission = () => {
+    const confirmSubmission = async () => {
         console.log('Submitting Check-Out:', { guest, selectedRooms});
+
         setShowConfirm(false);
+        setLoading(true);
+        const checkOutRequest = {
+            roomNumbers: selectedRooms,
+        };
+
+        try {
+            const res = await restClient.post("/guestLog/check-out", checkOutRequest, navigate);
+            console.log(res)
+            if(res.responseHeader.responseCode === "00") {
+                setShowSuccessModal(true);
+            }
+            else{
+                setModalMessage(res.responseHeader.responseMessage ?? "Something went wrong!");
+                setShowMissingFields(true);
+            }
+        }
+            // eslint-disable-next-line no-unused-vars
+        catch (error) {
+            setModalMessage("Something went wrong!");
+            setShowMissingFields(true);
+        }
+        finally {
+            setLoading(false);
+        }
+
     };
+
+    const onSuccess = () => {
+        setShowSuccessModal(false)
+        navigate("/home")
+    }
 
     return (
         <div>
+            {loading && <LoadingScreen />}
             <BackButton/>
 
             <div className="flex justify-center items-center px-8 py-3 w-full">
@@ -126,7 +152,7 @@ const CheckoutPage = () => {
                                 onChange={(e) => setSelectedRoom(e.target.value)}
                             >
                                 <option value="">-- Select Room --</option>
-                                {dummyData.occupiedRooms.map((room) => (
+                                {occupiedRooms.map((room) => (
                                     <option key={room} value={room}>
                                         Room #{room}
                                     </option>
@@ -153,8 +179,8 @@ const CheckoutPage = () => {
                         {guest && (
                             <GuestSummary
                                 guest={guest}
-                                totalPaid={guest.totalPaid}
-                                balance={guest.balance}
+                                totalPaid={guest.amountPaid}
+                                balance={guest.creditAmount}
                             />
                         )}
                     </div>
@@ -207,8 +233,16 @@ const CheckoutPage = () => {
             {/* ✅ Missing Fields Modal */}
             {showMissingFields && (
                 <ConfirmModal
-                    message="No room selected"
+                    message={modalMessage}
                     onCancel={() => setShowMissingFields(false)}
+                />
+            )}
+
+            {/* ✅ On Successful */}
+            {showSuccessModal && (
+                <ConfirmModal
+                    message="Check Out Successful!"
+                    onCancel={() => onSuccess()}
                 />
             )}
 

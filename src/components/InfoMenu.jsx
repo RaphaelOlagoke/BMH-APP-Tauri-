@@ -2,7 +2,7 @@ import React from 'react'
 
 const InfoMenu = ({menuItems}) => {
     return (
-        <div className="bg-white px-6 py-12 shadow-lg rounded-2xl me-5 my-5">
+        <div className="bg-white px-6 py-12 shadow-lg rounded-2xl me-5 my-5 ">
             <div className="flex space-x-20">
                 {menuItems.map(({ label, image, count , formattedValue}, index) => (
                     <div className="flex space-x-3" key={index}>

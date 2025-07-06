@@ -27,7 +27,8 @@ import RestaurantOrders from "./pages/RestaurantOrders.jsx";
 ReactDOM.createRoot(document.getElementById('root')).render(
     <HashRouter>
         <Routes>
-            <Route path="/" element={<Index />} />
+            <Route path="/home" element={<Index />} />
+            <Route path="/" element={<Login />} />
             <Route path="/login" element={<Login />} />
             <Route path="/check-in" element={<CheckInForm />} />
             <Route path="/check-out" element={<CheckOutPage />} />

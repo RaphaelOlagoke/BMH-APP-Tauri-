@@ -1,4 +1,3 @@
-
 import loginSVG from "/assets/images/loginImg.svg";
 import logo from "/assets/images/Logo.png";
 import availableRooms from "/assets/images/availableRooms.png";
@@ -17,10 +16,12 @@ import {
     ClipboardList,
     FileText,
     Percent,
-    RotateCcw, Settings,
-    Sparkles, Users,
+    Settings,
+    Sparkles,
+    Users,
     Utensils
 } from "lucide-react";
+import restClient from "./restClient.js";
 
 
 export const loginSVGImg = loginSVG;
@@ -38,17 +39,77 @@ export const syncInvoiceImg = sync;
 
 
 export const menuItems = [
-    { label: 'Guest Logs', icon: FileText, path: '/' },
-    { label: 'Room Reservation', icon: BedDouble, path: '/room-reservation' },
-    { label: 'Hall Reservation', icon: CalendarDays, path: '/hall-reservation' },
-    { label: 'Rooms', icon: Building2, path: '/rooms' },
-    { label: 'Room Service', icon: ClipboardList, path: '/room-service' },
-    { label: 'Inventory', icon: ClipboardList, path: '/inventory' },
-    { label: 'Restaurant & Bar', icon: Utensils, path: '/restaurant-bar' },
-    { label: 'House Keeping', icon: Sparkles, path: '/house-keeping' },
-    { label: 'Invoice', icon: FileText, path: '/invoice' },
+    { label: 'Guest Logs', icon: FileText, path: '/' , roles: ["SUPER_ADMIN","ADMIN", "MANAGER", "ACCOUNTS", "RECEPTIONIST"]},
+    { label: 'Room Reservation', icon: BedDouble, path: '/room-reservation', roles: ["SUPER_ADMIN","ADMIN", "MANAGER", "ACCOUNTS", "RECEPTIONIST"]},
+    { label: 'Hall Reservation', icon: CalendarDays, path: '/hall-reservation' , roles: ["SUPER_ADMIN","ADMIN", "MANAGER", "ACCOUNTS", "RECEPTIONIST"]},
+    { label: 'Rooms', icon: Building2, path: '/rooms', roles: ["SUPER_ADMIN"] },
+    { label: 'Room Service', icon: ClipboardList, path: '/room-service' , roles: ["SUPER_ADMIN"]},
+    { label: 'Inventory', icon: ClipboardList, path: '/inventory' , roles: ["SUPER_ADMIN","ADMIN", "MANAGER", "ACCOUNTS"]},
+    { label: 'Restaurant & Bar', icon: Utensils, path: '/restaurant-bar', roles: ["SUPER_ADMIN","ADMIN", "MANAGER", "ACCOUNTS"] },
+    { label: 'House Keeping', icon: Sparkles, path: '/house-keeping', roles: ["SUPER_ADMIN","ADMIN", "MANAGER", "ACCOUNTS"] },
+    { label: 'Invoice', icon: FileText, path: '/invoice', roles: ["SUPER_ADMIN","ADMIN", "MANAGER", "ACCOUNTS"] },
     // { label: 'Refund', icon: RotateCcw, path: '/refund' },
-    { label: 'Discount', icon: Percent, path: '/discount' },
-    { label: 'Settings', icon: Settings, path: '/settings' },
-    { label: 'Users', icon: Users, path: '/users' },
+    { label: 'Discount', icon: Percent, path: '/discount' , roles: ["SUPER_ADMIN"]},
+    { label: 'Settings', icon: Settings, path: '/settings', roles: ["SUPER_ADMIN"] },
+    { label: 'Users', icon: Users, path: '/users', roles: ["SUPER_ADMIN"] },
 ];
+
+export const loadRoomsData = async (setLoading, setRoomOptions, navigate) => {
+    setLoading(true);
+    try {
+        const res = await restClient.get('/room/all',navigate);
+        console.log(res)
+        if(res.data && res.responseHeader.responseCode === "00") {
+            const data = res.data
+            setRoomOptions(data.map(room => room.roomNumber))
+        }
+    }
+    catch (error) {
+        console.log(error);
+    }
+    finally {
+        setLoading(false);
+    }
+}
+
+export const roomList = async (navigate) => {
+    try {
+        const res = await restClient.get('/room/all',navigate);
+        console.log(res)
+        if(res.data && res.responseHeader.responseCode === "00") {
+            return res.data;
+        }
+    }
+        // eslint-disable-next-line no-unused-vars
+    catch (error) {
+        return  null;
+    }
+}
+
+export const getData = async (endpoint,navigate) => {
+    try {
+        const res = await restClient.get(endpoint,navigate);
+        console.log(res)
+        if(res.data && res.responseHeader.responseCode === "00") {
+            return res.data;
+        }
+    }
+        // eslint-disable-next-line no-unused-vars
+    catch (error) {
+        return  null;
+    }
+}
+
+export const postData = async (endpoint,data,navigate) => {
+    try {
+        const res = await restClient.post(endpoint,data,navigate);
+        console.log(res)
+        if(res.data && res.responseHeader.responseCode === "00") {
+            return res.data;
+        }
+    }
+        // eslint-disable-next-line no-unused-vars
+    catch (error) {
+        return  null;
+    }
+}

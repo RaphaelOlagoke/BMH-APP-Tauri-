@@ -19,7 +19,7 @@ import {
 import Header from "../components/Header.jsx";
 import InfoMenu from "../components/InfoMenu.jsx";
 import {
-    availableRoomsImg,
+    availableRoomsImg, loadRoomsData,
     maintenanceRoomsImg,
     menuItems,
     needsCleaningRoomsImg,
@@ -28,134 +28,40 @@ import {
 import Table from "../components/Table.jsx";
 import GuestLogsFilterForm from "../components/GuestLogsFilterForm.jsx";
 import {Link, useNavigate} from "react-router-dom";
+import restClient from "../utils/restClient.js";
+import LoadingScreen from "../components/LoadingScreen.jsx";
 
+// const roomsList = [
+//     { label: 'Available rooms', image: availableRoomsImg, count: "44" , value: ""},
+//     { label: 'Occupied rooms', image: occupiedRoomsImg, count: "44" , value: ""},
+//     { label: 'Needs Cleaning', image: needsCleaningRoomsImg, count: "44" , value: ""},
+//     { label: 'Under Maintenance', image: maintenanceRoomsImg, count: "44" , value: ""}
+// ];
 
-
-const roomsList = [
-    { label: 'Available rooms', image: availableRoomsImg, count: "44" , value: ""},
-    { label: 'Occupied rooms', image: occupiedRoomsImg, count: "44" , value: ""},
-    { label: 'Needs Cleaning', image: needsCleaningRoomsImg, count: "44" , value: ""},
-    { label: 'Under Maintenance', image: maintenanceRoomsImg, count: "44" , value: ""}
-];
+const statusStyles = {
+    ACTIVE: "bg-green-100 text-green-800",
+    COMPLETE: "bg-blue-200 text-blue-700",
+    OVERDUE: "bg-red-200 text-red-700",
+};
 
 const Index = () => {
     const navigate = useNavigate();
 
     const columns = [
-        { label: "Guest Name", accessor: "name" },
+        { label: "Guest Name", accessor: "guestName" },
         { label: "Status", accessor: "status", render: (value) => (
-                <span className={`px-2 py-1 text-xs font-medium rounded-full ${value === 'active' ? 'bg-green-100 text-green-800' : 'bg-gray-200 text-gray-700'}`}>
+                <span className={`px-2 py-1 text-xs font-medium rounded-full ${statusStyles[value]}`}>
                 {value.charAt(0).toUpperCase() + value.slice(1)}
             </span>
             )},
         { label: "Check-in", accessor: "checkInDate" },
-        { label: "Checkout", accessor: "checkoutDate" },
-        { label: "Room(s)", accessor: "rooms", render: (rooms) => rooms.join(', ') },
+        { label: "Checkout", accessor: "checkOutDate" },
+        { label: "Room(s)", accessor: "guestLogRooms", render: (rooms) => rooms.map(r => r.room.roomNumber).join(', ') },
         { label: "Payment Status", accessor: "paymentStatus", render: (value) => (
-                <span className={`px-2 py-1 text-xs font-medium rounded-full ${value === 'paid' ? 'bg-green-100 text-green-800' : 'bg-red-200 text-red-700'}`}>
+                <span className={`px-2 py-1 text-xs font-medium rounded-full ${value === 'PAID' ? 'bg-green-100 text-green-800' : 'bg-red-200 text-red-700'}`}>
                 {value.charAt(0).toUpperCase() + value.slice(1)}
             </span>
             )},
-    ];
-
-    const dataList = [
-        {
-            id: "g1",
-            name: "John Doe",
-            status: "active",
-            checkInDate: "2025-07-01",
-            checkoutDate: "2025-07-05",
-            phone: "08012345678",
-            nextOfKin: "Jane Doe",
-            nextOfKinPhone: "08098765432",
-            idType: "National ID",
-            idRef: "NIN123456789",
-            rooms: ["101", "102"],
-            roomTypes: ["Standard", "Standard"],
-            amountPaid: 50000,
-            creditAmount: 20000,
-            totalAmount: 70000,
-            outstanding: 20000,
-            paymentStatus: "paid",
-            invoices: [
-                {
-                    ref: "INV-1001",
-                    issueDate: "2025-06-20T09:00:00",
-                    paymentDate: "2025-06-22T12:00:00",
-                    totalAmount: 200000,
-                    paymentStatus: "PAID",
-                    paymentMethod: "BANK_TRANSFER",
-                    service: "HALL_RENTAL",
-                    serviceDetails: "Full-day rental of Grand Ballroom",
-                    discountCode: "WEDDING10",
-                    discountPercentage: 10,
-                    discountAmount: 20000,
-                    amountPaid: 180000,
-                    items: [
-                        {
-                            name: "Hall Rental",
-                            quantity: 1,
-                            price: 200000
-                        }
-                    ]
-                },
-                {
-                    ref: "INV-1002",
-                    issueDate: "2025-06-20T09:00:00",
-                    paymentDate: "2025-06-22T12:00:00",
-                    totalAmount: 200000,
-                    paymentStatus: "PAID",
-                    paymentMethod: "BANK_TRANSFER",
-                    service: "HALL_RENTAL",
-                    serviceDetails: "Full-day rental of Grand Ballroom",
-                    discountCode: "",
-                    discountPercentage: 0,
-                    discountAmount: 0,
-                    amountPaid: 200000,
-                    items: []
-                },
-            ],
-        },
-        {
-            id: "g2",
-            name: "Mary Smith",
-            status: "completed",
-            checkInDate: "2025-06-28",
-            checkoutDate: "2025-07-02",
-            phone: "08123456789",
-            nextOfKin: "Michael Smith",
-            nextOfKinPhone: "08199887766",
-            idType: "Driver's License",
-            idRef: "DL99887766",
-            rooms: ["103"],
-            roomTypes: ["Deluxe"],
-            amountPaid: 75000,
-            creditAmount: 0,
-            totalAmount: 75000,
-            outstanding: 0,
-            paymentStatus: "unpaid",
-            invoices: [],
-        },
-        {
-            id: "g3",
-            name: "Alice Johnson",
-            status: "active",
-            checkInDate: "2025-07-02",
-            checkoutDate: "2025-07-07",
-            phone: "09012345678",
-            nextOfKin: "Dave Johnson",
-            nextOfKinPhone: "09098765432",
-            idType: "Passport",
-            idRef: "A123456789",
-            rooms: ["104", "105"],
-            roomTypes: ["Suite", "Suite"],
-            amountPaid: 100000,
-            creditAmount: 50000,
-            totalAmount: 150000,
-            outstanding: 50000,
-            paymentStatus: "paid",
-            invoices: [],
-        }
     ];
 
     // const handleEdit = (item) => {
@@ -175,38 +81,102 @@ const Index = () => {
     //     }
     // };
 
-
-    const totalPages = 20;
-
     const [searchTerm, setSearchTerm] = useState('');
-    const [tableSearchTerm, tableSetSearchTerm] = useState('');
     const [startDate, setStartDate] = useState('');
     const [endDate, setEndDate] = useState('');
-    const [page, setPage] = useState(1);
+    const [roomNumber, setRoomNumber] = useState(0);
+    const [selectedPaymentStatus, setSelectedPaymentStatus] = useState(null);
+    const [selectedStatus, setSelectedStatus] = useState(null);
+    const [page, setPage] = useState(0);
     const [data, setData] = useState([]);
     const [pageCount, setPageCount] = useState(1);
+    const [loading, setLoading] = useState(false);
+    const [roomsList, setRoomsList] = useState([]);
+    const [roomOptions, setRoomOptions] = useState([]);
+
+
+    const paymentStatusOptions = ["UNPAID", "PAID", "DEBIT", "REFUNDED"];
+    const statusOptions = ["ACTIVE", "COMPLETE", "OVERDUE"];
+
+
+    const size = 20;
+
+    const loadRoomSummaryData = async () => {
+        setLoading(true);
+        try {
+            const res = await restClient.get('/room/roomSummary',navigate);
+            setRoomsList(res.data);
+            console.log(res)
+            if(res.data && res.responseHeader.responseCode === "00") {
+                const data = res.data
+                setRoomsList([
+                    { label: 'Available rooms', image: availableRoomsImg, count: data.noOfAvailableRooms , value: ""},
+                    { label: 'Occupied rooms', image: occupiedRoomsImg, count: data.noOfOccupiedRooms , value: ""},
+                    { label: 'Needs Cleaning', image: needsCleaningRoomsImg, count: data.noOfRoomsThatNeedCleaning , value: ""},
+                    { label: 'Under Maintenance', image: maintenanceRoomsImg, count: data.noOfRoomsThatNeedMaintenance , value: ""}
+                ]);
+            }
+        }
+        catch (error) {
+           console.log(error);
+        }
+        finally {
+            setLoading(false);
+        }
+    }
+
+
 
     const fetchData = async (page) => {
-        // const res = await fetch(`/api/items?page=${page}`);
-        // const { data, totalPages } = await res.json();
+        // if(roomsList.length === 0){
+        //     loadRoomSummaryData();
+        // }
+        setLoading(true);
+        try {
+            const startDateTime = startDate ? `${startDate}T00:00:00` : null;
+            const endDateTime = endDate ? `${endDate}T23:59:59` : null;
 
-        console.log(page);
-        setData(dataList);
-        setPageCount(totalPages);
+            const res = await restClient.post(`/guestLog/filter?page=${page}&size=${size}`, {
+                status: selectedStatus || null,
+                paymentStatus: selectedPaymentStatus || null,
+                startDate: startDateTime,
+                endDate: endDateTime,
+                roomNumber: roomNumber || 0,
+            },navigate);
+            console.log(res)
+            if (res?.responseHeader?.responseCode === "00") {
+                setData(res.data);
+                if (res.totalPages !== pageCount) {
+                    setPageCount(res.totalPages);
+                }
+            }
+        } catch (error) {
+            console.log(error);
+        } finally {
+            setLoading(false);
+        }
     };
 
     useEffect(() => {
+        console.log("Running useEffect with page:", page);
         fetchData(page);
     }, [page]);
 
+    useEffect(() => {
+        loadRoomSummaryData();
+        loadRoomsData(setLoading, setRoomOptions, roomOptions);
+    },[])
+
     const handlePageChange = (newPage) => {
-        if (newPage >= 1 && newPage <= pageCount) {
+        if (newPage !== page && newPage >= 0 && newPage <= pageCount) {
             setPage(newPage);
         }
     };
 
     const onSubmit = () => {
-
+        console.log("Submitting");
+        setPage(0);
+        fetchData(page)
     };
 
     // const navigate = useNavigate();
@@ -233,6 +203,7 @@ const Index = () => {
 
     return (
         <div className="flex" >
+            {loading && <LoadingScreen />}
             <Sidebar menuItems={menuItems}/>
 
             <main className="main ps-20 py-6 text-2xl w-full">
@@ -260,8 +231,15 @@ const Index = () => {
                     filterForm={
                         <GuestLogsFilterForm
                             headerText="Guest Logs"
-                            value={tableSearchTerm}
-                            onChange={tableSetSearchTerm}
+                            selectedPaymentStatus={selectedPaymentStatus}
+                            setSelectedPaymentStatus={setSelectedPaymentStatus}
+                            paymentStatusOptions={paymentStatusOptions}
+                            setSelectedStatus={setSelectedStatus}
+                            selectedStatus={selectedStatus}
+                            statusOptions={statusOptions}
+                            roomNumber={roomNumber}
+                            setRoomNumber={setRoomNumber}
+                            roomOptions={roomOptions}
                             startDate={startDate}
                             endDate={endDate}
                             setStartDate={setStartDate}
@@ -274,7 +252,7 @@ const Index = () => {
                     currentPage={page}
                     totalPages={pageCount}
                     onPageChange={handlePageChange}
-                    onEdit={(guest) => navigate(`/guest-log/${guest.id}`, { state: { guest } })}
+                    onEdit={(guest) => navigate(`/guest-log/${guest.guestName}`, { state:  guest  })}
                     showEdit={true}
                 />
             </main>

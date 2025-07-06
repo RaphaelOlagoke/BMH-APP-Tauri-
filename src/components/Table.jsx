@@ -69,19 +69,19 @@ data
             <div className="flex justify-end items-center gap-2 mt-4">
                 <button
                     onClick={() => onPageChange(currentPage - 1)}
-                    disabled={currentPage === 1}
+                    disabled={currentPage === 0}
                     className="px-3 py-1 text-sm border rounded disabled:opacity-50"
                 >
                     Previous
                 </button>
 
                 <span className="text-sm">
-                Page {currentPage} of {totalPages}
+                Page {currentPage + 1} of {totalPages}
               </span>
 
                 <button
                     onClick={() => onPageChange(currentPage + 1)}
-                    disabled={currentPage === totalPages}
+                    disabled={currentPage === totalPages-1}
                     className="px-3 py-1 text-sm border rounded disabled:opacity-50"
                 >
                     Next

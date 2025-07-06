@@ -14,11 +14,11 @@ const InvoiceModal = ({ invoices, onClose }) => {
 
 
     const totalOutstanding = invoices.reduce(
-        (sum, invoice) => sum + (invoice.totalAmount - invoice.amountPaid),
+        (sum, invoice) => sum + (invoice.totalAmount - (invoice.amountPaid + invoice.discountAmount)),
         0
     );
 
-    const paymentMethods = ["Card", "Cash", "Transfer"]
+    const paymentMethods = ["CASH", "CARD", "TRANSFER"]
 
     return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 text-[15px]">
@@ -45,7 +45,7 @@ const InvoiceModal = ({ invoices, onClose }) => {
                 </div>
 
                 {totalOutstanding === 0 ? (
-                    <span className="px-3 py-1 rounded-full bg-green-100 text-green-800 text-sm">
+                    <span className="px-3 py-3 h-max rounded-2xl bg-green-100 text-green-800 text-sm">
                             All Paid
                         </span>
                 ) : (
@@ -75,7 +75,7 @@ const InvoiceModal = ({ invoices, onClose }) => {
             )}
 
             {invoices.map((invoice) => (
-                <div className="text-start">
+                <div className="text-start" key={invoice.ref}>
                     <p><strong>Service Type:</strong> {invoice.service}</p>
                     <p><strong>Service Description:</strong> {invoice.serviceDetails}</p>
                     <div className="flex items-center gap-4 py-2">

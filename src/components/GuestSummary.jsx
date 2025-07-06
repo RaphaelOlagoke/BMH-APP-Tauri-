@@ -3,8 +3,8 @@ import React from 'react'
 const GuestSummary = ({guest, totalPaid, balance}) => {
     return (
         <div className="grid grid-cols-2 gap-4">
-            <p><strong>Name:</strong> {guest.name}</p>
-            <p><strong>Phone:</strong> {guest.phone}</p>
+            <p><strong>Name:</strong> {guest.guestName}</p>
+            <p><strong>Phone:</strong> {guest.phoneNumber}</p>
             <p><strong>ID Type:</strong> {guest.idType}</p>
             <p><strong>ID Ref:</strong> {guest.idRef}</p>
             <p><strong>Total Paid:</strong> ₦{totalPaid.toLocaleString()}</p>

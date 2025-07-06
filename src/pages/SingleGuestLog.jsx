@@ -9,13 +9,14 @@ import ChangeRoom from "../Modals/ChangeRoom.jsx";
 import ExtendStay from "../Modals/ExtendStay.jsx";
 
 const statusStyles = {
-    active: "bg-green-100 text-green-800",
-    completed: "bg-gray-200 text-gray-700",
+    ACTIVE: "bg-green-100 text-green-800",
+    COMPLETE: "bg-gray-200 text-gray-700",
+    OVERDUE: "bg-red-200 text-red-700",
 };
 
 const paymentStatusStyles = {
-    paid: "bg-green-100 text-green-800",
-    unpaid: "bg-red-100 text-red-800",
+    PAID: "bg-green-100 text-green-800",
+    UNPAID: "bg-red-100 text-red-800",
 };
 
 const handleChargeServices = (servicesCharged) => {
@@ -31,7 +32,8 @@ const SingleGuestLog = () => {
 
     console.log(id);
 
-    const guest = state?.guest || {};
+    const guest = state || {};
+    console.log(guest);
 
 // Dummy functions for room actions
     const onAddRoom = () => {
@@ -68,19 +70,19 @@ const SingleGuestLog = () => {
                 {/* Status Badge */}
                 <div className="flex justify-end">
                     <span className={`px-4 py-1 text-sm rounded-full font-medium ${statusStyles[guest.status] || ""}`}>
-                        {guest.status.charAt(0).toUpperCase() + guest.status.slice(1)}
+                        {guest.status}
                     </span>
                 </div>
 
                 <h2 className="text-xl font-semibold border-b pb-2">Guest Details</h2>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
-                    <p><strong>Name:</strong> {guest.name}</p>
-                    <p><strong>Phone:</strong> {guest.phone}</p>
-                    <p><strong>Next of Kin:</strong> {guest.nextOfKin}</p>
-                    <p><strong>Next of Kin Phone:</strong> {guest.nextOfKinPhone}</p>
+                    <p><strong>Name:</strong> {guest.guestName}</p>
+                    <p><strong>Phone:</strong> {guest.phoneNumber}</p>
+                    <p><strong>Next of Kin:</strong> {guest.nextOfKinName}</p>
+                    <p><strong>Next of Kin Phone:</strong> {guest.nextOfKinNumber}</p>
                     <p><strong>Check-in Date:</strong> {guest.checkInDate}</p>
-                    <p><strong>Expected Checkout:</strong> {guest.expectedCheckout}</p>
-                    <p><strong>Actual Checkout:</strong> {guest.checkoutDate || "Not checked out yet"}</p>
+                    <p><strong>Expected Checkout:</strong> {guest.expectedCheckOutDate}</p>
+                    <p><strong>Actual Checkout:</strong> {guest.checkOutDate || "Not checked out yet"}</p>
                     <p><strong>ID Type:</strong> {guest.idType}</p>
                     <p><strong>ID Reference:</strong> {guest.idRef}</p>
                 </div>
@@ -90,7 +92,7 @@ const SingleGuestLog = () => {
             <div className="bg-white p-6 my-8 rounded-xl shadow-md space-y-4 text-start">
                 <div className="flex justify-between items-center border-b pb-2">
                     <h2 className="text-xl font-semibold">Room & Payment Details</h2>
-                    { guest.status === "active" && (
+                    { guest.status === "ACTIVE" && (
                         <div className="relative group">
                             <button className="flex items-center gap-1 text-sm bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">
                                 Actions <MoreVertical size={16} />
@@ -106,18 +108,18 @@ const SingleGuestLog = () => {
                 </div>
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
-                    <p><strong>Room(s):</strong> {guest.rooms.join(", ")}</p>
+                    <p><strong>Room(s):</strong> {guest.guestLogRooms.map(r => `${r.room.roomNumber} (${r.guestLogStatus})`).join(', ')}</p>
+                    <p><strong>Room Types:</strong> {guest.guestLogRooms.map(r => r.room.roomType).join(', ')}</p>
                     <p>
                         <strong>Payment Status:</strong>{" "}
                         <span className={`px-2 py-1 rounded ${paymentStatusStyles[guest.paymentStatus]}`}>
-                            {guest.paymentStatus === "paid" ? "Paid" : "Unpaid"}
+                            {guest.paymentStatus}
                         </span>
                     </p>
                     <p><strong>Amount Paid:</strong> ₦{guest.amountPaid?.toLocaleString()}</p>
                     <p><strong>Credit Amount:</strong> ₦{guest.creditAmount?.toLocaleString()}</p>
-                    <p><strong>Amount Due:</strong> ₦{guest.outstanding?.toLocaleString()}</p>
-                    <p><strong>Outstanding:</strong> ₦{guest.outstanding?.toLocaleString()}</p>
-                    <p><strong>Room Types:</strong> {guest.roomTypes.join(", ")}</p>
+                    <p><strong>Amount Due:</strong> ₦{guest.totalAmountDue?.toLocaleString()}</p>
+                    {/*<p><strong>Outstanding:</strong> ₦{guest.outstanding?.toLocaleString()}</p>*/}
                 </div>
             </div>
 
@@ -143,7 +145,7 @@ const SingleGuestLog = () => {
                     )}
                 </div>
 
-                { guest.status === "active" && (
+                { guest.status !== "COMPLETE" && (
                     <button
                         onClick={() => setShowRoomServiceModal(true)}
                         className="bg-green-600 text-white px-6 py-3 rounded hover:bg-green-700 flex items-center gap-2"
