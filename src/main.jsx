@@ -21,6 +21,8 @@ import Invoice from "./pages/Invoice.jsx";
 import Discount from "./pages/Discount.jsx";
 import User from "./pages/User.jsx";
 import SettingsPage from "./pages/SettingsPage.jsx";
+import RestaurantPage from "./pages/Restaurant.jsx";
+import RestaurantOrders from "./pages/RestaurantOrders.jsx";
 
 ReactDOM.createRoot(document.getElementById('root')).render(
     <HashRouter>
@@ -43,6 +45,8 @@ ReactDOM.createRoot(document.getElementById('root')).render(
             <Route path="/discount" element={<Discount />} />
             <Route path="/users" element={<User />} />
             <Route path="/settings" element={<SettingsPage />} />
+            <Route path="/restaurant-bar" element={<RestaurantPage />} />
+            <Route path="/restaurant-orders" element={<RestaurantOrders />} />
         </Routes>
     </HashRouter>
 );

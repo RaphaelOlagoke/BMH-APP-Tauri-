@@ -36,7 +36,7 @@ const InvoiceFilter = ({
 
                     {/* Payment Method Dropdown */}
                     <div className="flex flex-col space-y-2">
-                        <p className="text-sm">Category</p>
+                        <p className="text-sm">Payment Method</p>
                         <select
                             value={selectedPaymentMethod}
                             onChange={(e) => setSelectedPaymentMethod(e.target.value)}
@@ -53,7 +53,7 @@ const InvoiceFilter = ({
 
                     {/* Payment Status Dropdown */}
                     <div className="flex flex-col space-y-2">
-                        <p className="text-sm">Category</p>
+                        <p className="text-sm">Payment Status</p>
                         <select
                             value={selectedPaymentStatus}
                             onChange={(e) => setSelectedPaymentStatus(e.target.value)}
@@ -70,7 +70,7 @@ const InvoiceFilter = ({
 
                     {/* Service Dropdown */}
                     <div className="flex flex-col space-y-2">
-                        <p className="text-sm">Category</p>
+                        <p className="text-sm">Service</p>
                         <select
                             value={selectedService}
                             onChange={(e) => setSelectedService(e.target.value)}

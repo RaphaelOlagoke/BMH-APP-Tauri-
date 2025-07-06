@@ -83,7 +83,7 @@ const InvoiceModal = ({ invoices, onClose }) => {
                             <strong>Status:</strong>
                         </p>
                         <span className={`text-xs font-medium px-2 py-1 rounded-full
-                                ${invoice.paymentStatus.toLocaleLowerCase() === 'paid' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
+                                ${invoice.paymentStatus === 'PAID' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
                                 {invoice.paymentStatus}
                             </span>
                     </div>

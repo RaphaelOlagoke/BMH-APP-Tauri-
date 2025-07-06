@@ -164,6 +164,7 @@ const CheckoutPage = () => {
                         {guest && invoices.length > 0 && (
                             <div className="">
                                 <button
+                                    type='button'
                                     onClick={() => setShowInvoice(true)}
                                     className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
                                 >
@@ -176,7 +177,8 @@ const CheckoutPage = () => {
                         {guest && (
                             <div className="">
                                 <button
-                                    onClick={() => handleCheckOut()}
+                                    type="button"
+                                    onClick={handleCheckOut}
                                     className="bg-green-600 text-white px-6 py-3 rounded hover:bg-green-700"
                                 >
                                     Confirm Check-Out

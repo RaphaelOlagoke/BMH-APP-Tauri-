@@ -214,7 +214,6 @@ const Invoice = () => {
 
             <main className="main ps-20 py-6 mt-3 text-2xl w-full">
                 <Header headerText="Hello Evano 👋🏼," />
-                <InfoMenu menuItems={formattedInvoiceSummary}/>
                 <div className="p-4 my-3 me-3">
                     <div className="flex justify-end mb-4">
                         <CreateButton onClick={() => setShowCreateModal(true)} />
@@ -229,6 +228,7 @@ const Invoice = () => {
                         />
                     )}
                 </div>
+                <InfoMenu menuItems={formattedInvoiceSummary}/>
                 <Table
                     filterForm={
                         <InvoiceFilter
