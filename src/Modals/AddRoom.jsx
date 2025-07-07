@@ -1,16 +1,25 @@
 import React, { useState, useEffect } from 'react';
 import ConfirmModal from "../components/ConfirmModal.jsx";
+import {useNavigate} from "react-router-dom";
+import LoadingScreen from "../components/LoadingScreen.jsx";
+import restClient from "../utils/restClient.js";
 
 const AddRoom = ({
       roomTypes = [],
       availableRooms = {},
-      onClose
+      onClose,
+    guest,
+    onSubmit,
   }) => {
     const [roomType, setRoomType] = useState('');
     const [roomNumber, setRoomNumber] = useState('');
     const [roomPrice, setRoomPrice] = useState(0);
     const [showConfirm, setShowConfirm] = useState(false);
     const [showMissingFields, setShowMissingFields] = useState(false);
+    const [loading, setLoading] = useState(false);
+    const [showSuccessModal, setShowSuccessModal] = useState(false);
+    const navigate = useNavigate();
+    const [modalMessage, setModalMessage] = useState("");
 
     useEffect(() => {
         if (roomType) {
@@ -26,17 +35,48 @@ const AddRoom = ({
             setShowConfirm(true);
         }
         else{
+            setModalMessage("No rooms selected");
             setShowMissingFields(false);
         }
     };
 
-    const confirmSubmission = () => {
-        console.log('Adding Room:', { roomNumber});
+    const confirmSubmission = async () => {
+        // console.log('Adding Room:', { roomNumber});
         setShowConfirm(false);
+        setLoading(true);
+        try {
+            const currentRoom = guest.guestLogRooms[0].room.roomNumber;
+            const res = await restClient.post(`/guestLog/addRoom?currentRoom=${currentRoom}&newRoom=${roomNumber}`, {}, navigate);
+            // console.log("Add Room",res)
+            if(res.responseHeader.responseCode === "00") {
+                setModalMessage("Room added successfully");
+                setShowSuccessModal(true);
+            }
+            else{
+                setModalMessage(res.error ?? "Something went wrong!");
+                setShowMissingFields(true);
+            }
+        }
+            // eslint-disable-next-line no-unused-vars
+        catch (error) {
+            setModalMessage("Something went wrong!");
+            setShowMissingFields(true);
+        }
+        finally {
+            setLoading(false);
+        }
     };
+
+
+    const onSuccess = () => {
+        setShowSuccessModal(false)
+        onClose();
+        onSubmit();
+    }
 
     return (
         <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center">
+            {loading && <LoadingScreen />}
             <div className="bg-white rounded-lg p-6 w-full max-w-md shadow-lg">
                 <div className="flex justify-between items-center mb-4">
                     <h2 className="text-lg font-semibold">Add Room</h2>
@@ -108,8 +148,16 @@ const AddRoom = ({
             {/* ✅ Missing Fields Modal */}
             {showMissingFields && (
                 <ConfirmModal
-                    message="No room selected"
+                    message={modalMessage}
                     onCancel={() => setShowMissingFields(false)}
+                />
+            )}
+
+            {/* ✅ On Successful */}
+            {showSuccessModal && (
+                <ConfirmModal
+                    message={modalMessage}
+                    onCancel={() => onSuccess()}
                 />
             )}
         </div>

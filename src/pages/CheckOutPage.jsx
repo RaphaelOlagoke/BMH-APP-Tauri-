@@ -30,14 +30,26 @@ const CheckoutPage = () => {
     useEffect(() => {
         setLoading(true);
         const fetchRooms = async () => {
-            const roomData = await getData("/room/status?roomStatus=OCCUPIED");
-            setLoading(false);
-            if(!roomData){
+            try {
+                const res = await restClient.get("/room/status?roomStatus=OCCUPIED",navigate);
+                console.log(res)
+                if(res.responseHeader.responseCode === "00") {
+                    const roomData =  res.data;
+                    setOccupiedRooms(roomData.map(room => room.roomNumber));
+                }
+                else{
+                    setModalMessage(res.error ?? "Something went wrong!");
+                    setShowMissingFields(true);
+                }
+            }
+                // eslint-disable-next-line no-unused-vars
+            catch (error) {
                 setModalMessage("Something went wrong!");
                 setShowMissingFields(true);
-                return;
             }
-            setOccupiedRooms(roomData.map(room => room.roomNumber));
+            finally {
+                setLoading(false);
+            }
         };
 
         fetchRooms();

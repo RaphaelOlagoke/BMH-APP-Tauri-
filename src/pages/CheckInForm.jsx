@@ -1,9 +1,10 @@
 import React, {useEffect, useState} from 'react';
-import {getData, logoImg, postData, roomList} from "../utils/index.js";
-import { ArrowLeft, Plus, Trash2, CheckCircle } from 'lucide-react';
+import {getData, logoImg, roomList} from "../utils/index.js";
+import {ArrowLeft, Plus, Trash2, CheckCircle, Trash} from 'lucide-react';
 import {useLocation, useNavigate} from 'react-router-dom';
 import ConfirmModal from "../components/ConfirmModal.jsx";
 import LoadingScreen from "../components/LoadingScreen.jsx";
+import restClient from "../utils/restClient.js";
 
 
 const idTypes = ['DRIVER_LICENSE', 'NIN', 'PASSPORT', 'VOTER_CARD'];
@@ -29,6 +30,7 @@ const CheckInForm = () => {
     const [discountCode, setDiscountCode] = useState('');
 
     const [showConfirm, setShowConfirm] = useState(false);
+    const [showReservationCancelConfirm, setShowReservationCancelConfirm] = useState(false);
     const [showMissingFields, setShowMissingFields] = useState(false);
     const [modalMessage, setModalMessage] = useState("");
     const navigate = useNavigate();
@@ -37,31 +39,42 @@ const CheckInForm = () => {
     const [availableRooms, setAvailableRooms] = useState({});
     const [loading, setLoading] = useState(false);
     const [showSuccessModal, setShowSuccessModal] = useState(false);
+    const [roomPriceData, setRoomPriceData] = useState({});
+    const [roomPriceMap, setRoomPriceMap] = useState({});
+    // const [roomDtoList, setRoomDtoList] = useState([]);
 
     useEffect(() => {
         const fetchRooms = async () => {
-            const roomDtoList = await roomList(navigate);
+            const fetchedRoomDtoList = await roomList(navigate);
+            const fetchedRoomPriceData = await getData("/roomPrices/all", navigate);
 
-            const roomPriceData = await getData("/roomPrices/all",navigate)
-            if(!roomPriceData  || !roomDtoList){
+
+            if (!fetchedRoomDtoList || !fetchedRoomPriceData) {
                 setModalMessage("Something went wrong!");
                 setShowMissingFields(true);
-                return;
+                return
             }
 
+
+            // setRoomDtoList(fetchedRoomDtoList);
+            // setRoomPriceData(fetchedRoomPriceData);
+            //
+            // console.log("roomDto",roomDtoList);
+            // console.log("roomPriceData",roomPriceData)
+
             const roomPriceMap = {
-                EXECUTIVE_SUITE: roomPriceData.executiveSuitePrice,
-                BUSINESS_SUITE_A: roomPriceData.businessSuiteAPrice,
-                BUSINESS_SUITE_B: roomPriceData.businessSuiteBPrice,
-                EXECUTIVE_DELUXE: roomPriceData.executiveDeluxePrice,
-                DELUXE: roomPriceData.deluxePrice,
-                CLASSIC: roomPriceData.classicPrice,
+                EXECUTIVE_SUITE: fetchedRoomPriceData.executiveSuitePrice,
+                BUSINESS_SUITE_A: fetchedRoomPriceData.businessSuiteAPrice,
+                BUSINESS_SUITE_B: fetchedRoomPriceData.businessSuiteBPrice,
+                EXECUTIVE_DELUXE: fetchedRoomPriceData.executiveDeluxePrice,
+                DELUXE: fetchedRoomPriceData.deluxePrice,
+                CLASSIC: fetchedRoomPriceData.classicPrice,
             };
 
             const roomTypesSet = new Set();
             const tempAvailableRooms = {};
 
-            roomDtoList?.forEach(room => {
+            fetchedRoomDtoList?.forEach(room => {
                 const type = room.roomType;
 
                 if (!roomPriceMap[type]) return;
@@ -151,29 +164,76 @@ const CheckInForm = () => {
             paymentMethod: paymentMethod,
             discountCode: discountCode,
             noOfDays: numDays,
-            idType: guest.idType,
+            idType: guest.idType || null,
             idRef: guest.idRef,
             nextOfKinName: guest.nextOfKin,
             nextOfKinNumber: guest.nextOfKinPhone,
             phoneNumber: guest.phone
         };
         console.log(checkInRequest);
-        const res = await postData("/guestLog/", checkInRequest, navigate);
-        console.log("res",res)
-        setLoading(false);
-        if (res) {
-            setShowSuccessModal(true);
+        try {
+            const res = await restClient.post("/guestLog/", checkInRequest, navigate);
+            console.log(res)
+            if(res.data && res.responseHeader.responseCode === "00") {
+                setModalMessage("Check In Successful!");
+                setShowSuccessModal(true);
+                if(reservationData) {
+                    await restClient.post(`/reservation/update?ref=${reservationData.ref}`, {}, navigate);
+                }
+            }
+            else{
+                setModalMessage(res.error ?? "Something went wrong!");
+                setShowMissingFields(true);
+            }
         }
-        else{
+            // eslint-disable-next-line no-unused-vars
+        catch (error) {
             setModalMessage("Something went wrong!");
             setShowMissingFields(true);
+        }
+        finally {
+            setLoading(false);
         }
 
     };
 
     const onSuccess = () => {
         setShowSuccessModal(false)
-        navigate("/home")
+        if(reservationData){
+            navigate("/room-reservation");
+        }
+        else{
+            navigate("/home")
+        }
+    }
+
+    const cancelReservation = async () => {
+        setShowReservationCancelConfirm(true)
+    }
+
+    const handleCancelReservation = async () => {
+        setShowReservationCancelConfirm(false);
+        setLoading(true);
+        try {
+            const res = await restClient.post(`/reservation/cancel?ref=${reservationData.ref}`, {}, navigate);
+            console.log(res)
+            if(res.responseHeader.responseCode === "00") {
+                setModalMessage("Reservation canceled successfully");
+                setShowSuccessModal(true);
+            }
+            else{
+                setModalMessage(res.error ?? "Something went wrong!");
+                setShowMissingFields(true);
+            }
+        }
+            // eslint-disable-next-line no-unused-vars
+        catch (error) {
+            setModalMessage("Something went wrong!");
+            setShowMissingFields(true);
+        }
+        finally {
+            setLoading(false);
+        }
     }
 
     const location = useLocation();
@@ -182,49 +242,61 @@ const CheckInForm = () => {
     const paymentMethods = ["CARD", "CASH", "TRANSFER"];
 
     useEffect(() => {
-        if (reservationData) {
-            // Prefill guest info
+        const prefillReservationData = async () => {
+            if (!reservationData) return;
+
+            // Fetch price data first
+            const roomPriceDataFetched = await getData("/roomPrices/all", navigate);
+            if (!roomPriceDataFetched) {
+                setModalMessage("Something went wrong!");
+                setShowMissingFields(true);
+                return;
+            }
+
+            setRoomPriceData(roomPriceDataFetched);
+
+            const localRoomPriceMap = {
+                EXECUTIVE_SUITE: roomPriceDataFetched.executiveSuitePrice,
+                BUSINESS_SUITE_A: roomPriceDataFetched.businessSuiteAPrice,
+                BUSINESS_SUITE_B: roomPriceDataFetched.businessSuiteBPrice,
+                EXECUTIVE_DELUXE: roomPriceDataFetched.executiveDeluxePrice,
+                DELUXE: roomPriceDataFetched.deluxePrice,
+                CLASSIC: roomPriceDataFetched.classicPrice,
+            };
+
+            // Now you can safely use localRoomPriceMap
+            const newSelectedRooms = reservationData.roomNumbers.map((room) => ({
+                room: room.roomNumber,
+                type: room.roomType,
+                price: localRoomPriceMap[room.roomType] || 0
+            }));
+
+            setRoomPriceMap(localRoomPriceMap); // still update state
+            setSelectedRooms(newSelectedRooms);
             setGuest({
-                name: reservationData.name || '',
-                phone: reservationData.phone || '',
+                name: reservationData.guestName || '',
+                phone: reservationData.guestPhoneNumber || '',
                 nextOfKin: reservationData.nextOfKin || '',
                 nextOfKinPhone: reservationData.nextOfKinPhone || '',
                 idType: reservationData.idType || '',
                 idRef: reservationData.idRef || ''
             });
 
-
-            // Prefill room info
             setRoomType(reservationData.roomType || '');
             setSelectedRoom(reservationData.roomNumber || '');
 
-            // Optional: add room to selectedRooms if needed
-            const newSelectedRooms = reservationData.roomList.map((room) => ({
-                room: room.number,
-                type: room.type,
-                price: room.price
-            }));
-
-            setSelectedRooms(newSelectedRooms);
-
-            // if (reservationData.rooms && reservationData.roomTypes && reservationData.price) {
-            //     setSelectedRooms([
-            //         {
-            //             room: reservationData.roomNumber,
-            //             type: reservationData.roomType,
-            //             price: reservationData.price
-            //         }
-            //     ]);
-            // }
-
-            // Set number of days
             setNumDays(reservationData.numDays || 1);
 
-            // Set total and current price
-            setCurrentPrice(reservationData.price || 0);
-            setTotalPrice((reservationData.price || 0) * (reservationData.numDays || 1));
-        }
+            const total = newSelectedRooms.reduce((sum, room) => sum + room.price, 0) * (reservationData.numDays || 1);
+
+            setCurrentPrice(newSelectedRooms[0]?.price || 0);
+            setTotalPrice(total);
+        };
+
+        prefillReservationData();
     }, [reservationData]);
+
+
 
     return (
         <div>
@@ -287,7 +359,7 @@ const CheckInForm = () => {
                             <ul className="list-disc list-inside space-y-1">
                                 {selectedRooms.map((room, idx) => (
                                     <li key={idx} className="flex justify-between items-center bg-gray-100 p-2 rounded">
-                                        <span>{room.type} Room - #{room.room} - ₦{room.price.toLocaleString()}</span>
+                                        <span>{room.type} Room - #{room.room} - ₦{roomPriceData ? roomPriceMap[room.type] : 0}</span>
                                         <button
                                             type="button"
                                             onClick={() =>
@@ -347,15 +419,51 @@ const CheckInForm = () => {
                     </div>
 
 
-                    {/* Check-In Button */}
-                    <div className="flex justify-end">
-                        <button type="submit" className="bg-green-600 text-white rounded px-6 py-2 w-max hover:bg-green-700 transition">
-                            <div className="flex items-center space-x-3 justify-center">
-                                <CheckCircle size={18} />
-                                <p>Check-In</p>
+                    {reservationData ? (
+                        <div className="flex items-center justify-between">
+                            {/* Cancel reservation Button */}
+                            <div className="flex justify-end">
+                                <button
+                                    type="button"
+                                    onClick={cancelReservation}
+                                    className="bg-red-600 text-white rounded px-6 py-2 w-max hover:bg-red-700 transition"
+                                >
+                                    <div className="flex items-center space-x-3 justify-center">
+                                        <Trash2 size={18} />
+                                        <p>Cancel Reservation</p>
+                                    </div>
+                                </button>
                             </div>
-                        </button>
-                    </div>
+
+                            {/* Check-In Button */}
+                            <div className="flex justify-end">
+                                <button
+                                    type="submit"
+                                    className="bg-green-600 text-white rounded px-6 py-2 w-max hover:bg-green-700 transition"
+                                >
+                                    <div className="flex items-center space-x-3 justify-center">
+                                        <CheckCircle size={18} />
+                                        <p>Check-In</p>
+                                    </div>
+                                </button>
+                            </div>
+                        </div>
+                    ) : (
+                        <div className="flex justify-end">
+                            {/* Check-In Button */}
+                            <button
+                                type="submit"
+                                className="bg-green-600 text-white rounded px-6 py-2 w-max hover:bg-green-700 transition"
+                            >
+                                <div className="flex items-center space-x-3 justify-center">
+                                    <CheckCircle size={18} />
+                                    <p>Check-In</p>
+                                </div>
+                            </button>
+                        </div>
+                    )}
+
+
 
                 </form>
             </div>
@@ -365,6 +473,15 @@ const CheckInForm = () => {
                     message="Confirm Check-In?"
                     onConfirm={confirmSubmission}
                     onCancel={() => setShowConfirm(false)}
+                />
+            )}
+
+            {/* ✅ Confirm Cancel Modal */}
+            {showReservationCancelConfirm && (
+                <ConfirmModal
+                    message="Cancel Reservation?"
+                    onConfirm={handleCancelReservation}
+                    onCancel={() => setShowReservationCancelConfirm(false)}
                 />
             )}
 
@@ -379,7 +496,7 @@ const CheckInForm = () => {
             {/* ✅ On Successful */}
             {showSuccessModal && (
                 <ConfirmModal
-                    message="Check In Successful!"
+                    message={modalMessage}
                     onCancel={() => onSuccess()}
                 />
             )}

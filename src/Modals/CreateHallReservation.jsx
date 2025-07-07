@@ -1,6 +1,9 @@
 import React, { useState } from 'react';
 import { X } from 'lucide-react';
 import ConfirmModal from "../components/ConfirmModal.jsx";
+import restClient from "../utils/restClient.js";
+import {useNavigate} from "react-router-dom";
+import LoadingScreen from "../components/LoadingScreen.jsx";
 
 const CreateHallReservation = ({
       onClose,
@@ -28,6 +31,11 @@ const CreateHallReservation = ({
     const selectedHall = hallTypes.find((h) => h.type === hallType);
     const price = selectedHall ? selectedHall.price : 0;
 
+    const [loading, setLoading] = useState(false);
+    const [showSuccessModal, setShowSuccessModal] = useState(false);
+    const navigate = useNavigate();
+    const [modalMessage, setModalMessage] = useState("");
+
     const handleGuestChange = (e) => {
         const { name, value } = e.target;
         setGuest((prev) => ({ ...prev, [name]: value }));
@@ -44,6 +52,7 @@ const CreateHallReservation = ({
             !eventDateTime ||
             !description
         ) {
+            setModalMessage("Please fill all required fields");
             setShowMissingFields(true);
         }
         else{
@@ -51,21 +60,52 @@ const CreateHallReservation = ({
         }
     };
 
-    const confirmSubmission = () => {
-        onSubmit({
-            guest,
-            hallType,
-            paymentMethod,
-            eventDateTime,
-            price,
-            description
-        });
+    const confirmSubmission = async () => {
         setShowConfirm(false);
-        onClose();
+        setLoading(true);
+        const createReservationRequest = {
+            guestName: guest.name,
+            idType: guest.idType || null,
+            idRef: guest.idRef || null,
+            nextOfKinName: guest.nextOfKin,
+            nextOfKinNumber: guest.nextOfKinPhone,
+            phoneNumber: guest.phone,
+            hallType: hallType,
+            startDate: eventDateTime,
+            description: description,
+            paymentMethod: paymentMethod
+        };
+        console.log(createReservationRequest);
+        try {
+            const res = await restClient.post("/hallLog/", createReservationRequest, navigate);
+            console.log(res)
+            if(res.data && res.responseHeader.responseCode === "00") {
+                setShowSuccessModal(true);
+            }
+            else{
+                setModalMessage(res.responseHeader.responseMessage ?? "Something went wrong!");
+                setShowMissingFields(true);
+            }
+        }
+            // eslint-disable-next-line no-unused-vars
+        catch (error) {
+            setModalMessage("Something went wrong!");
+            setShowMissingFields(true);
+        }
+        finally {
+            setLoading(false);
+        }
     };
+
+    const onSuccess = () => {
+        setShowSuccessModal(false)
+        onClose();
+        onSubmit();
+    }
 
     return (
         <div className="fixed inset-0 z-50 bg-black bg-opacity-40 flex items-center justify-center text-start text-xl ">
+            {loading && <LoadingScreen />}
             <form
                 onSubmit={handleSubmit}
                 className="bg-white w-full max-w-2xl p-6 rounded-lg shadow-lg overflow-y-auto max-h-[90vh]"
@@ -207,10 +247,18 @@ const CreateHallReservation = ({
                 {/* ✅ Missing Fields Modal */}
                 {showMissingFields && (
                     <ConfirmModal
-                        message="Please fill all required fields"
+                        message={modalMessage}
                         onCancel={() => setShowMissingFields(false)}
                     />
                 )}
+                {/* ✅ On Successful */}
+                {showSuccessModal && (
+                    <ConfirmModal
+                        message="Reservation Created"
+                        onCancel={() => onSuccess()}
+                    />
+                )}
+
             </form>
         </div>
     );

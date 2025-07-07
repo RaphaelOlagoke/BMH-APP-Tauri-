@@ -63,7 +63,7 @@ const HallReservationFilter = ({
 
                     {/* Payment Status Dropdown */}
                     <div className="flex flex-col space-y-2">
-                        <p className="text-sm">Status</p>
+                        <p className="text-sm">Payment Status</p>
                         <select
                             value={selectedPaymentStatus}
                             onChange={(e) => setSelectedPaymentStatus(e.target.value)}

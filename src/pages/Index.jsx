@@ -85,8 +85,8 @@ const Index = () => {
     const [startDate, setStartDate] = useState('');
     const [endDate, setEndDate] = useState('');
     const [roomNumber, setRoomNumber] = useState(0);
-    const [selectedPaymentStatus, setSelectedPaymentStatus] = useState(null);
-    const [selectedStatus, setSelectedStatus] = useState(null);
+    const [selectedPaymentStatus, setSelectedPaymentStatus] = useState("");
+    const [selectedStatus, setSelectedStatus] = useState("");
     const [page, setPage] = useState(0);
     const [data, setData] = useState([]);
     const [pageCount, setPageCount] = useState(1);
@@ -106,7 +106,7 @@ const Index = () => {
         try {
             const res = await restClient.get('/room/roomSummary',navigate);
             setRoomsList(res.data);
-            console.log(res)
+            // console.log(res)
             if(res.data && res.responseHeader.responseCode === "00") {
                 const data = res.data
                 setRoomsList([
@@ -143,7 +143,7 @@ const Index = () => {
                 endDate: endDateTime,
                 roomNumber: roomNumber || 0,
             },navigate);
-            console.log(res)
+            // console.log(res)
             if (res?.responseHeader?.responseCode === "00") {
                 setData(res.data);
                 if (res.totalPages !== pageCount) {
@@ -158,13 +158,13 @@ const Index = () => {
     };
 
     useEffect(() => {
-        console.log("Running useEffect with page:", page);
+        // console.log("Running useEffect with page:", page);
         fetchData(page);
     }, [page]);
 
     useEffect(() => {
         loadRoomSummaryData();
-        loadRoomsData(setLoading, setRoomOptions, roomOptions);
+        loadRoomsData(setLoading, setRoomOptions, roomOptions,"/room/");
     },[])
 
     const handlePageChange = (newPage) => {

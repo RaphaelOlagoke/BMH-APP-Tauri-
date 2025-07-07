@@ -1,12 +1,16 @@
-import React, {useState} from "react";
+import React, {useEffect, useState} from "react";
 import {MoreVertical, BedDouble, PlusCircle, Repeat, Replace, ArrowLeft} from "lucide-react";
-import {useLocation, useParams} from "react-router-dom";
+import {useLocation, useNavigate, useParams} from "react-router-dom";
 import InvoiceModal from "../components/InvoiceModal.jsx";
 import BackButton from "../components/BackButton.jsx";
 import RoomServiceModal from "../components/RoomServiceModal.jsx";
 import AddRoom from "../Modals/AddRoom.jsx";
 import ChangeRoom from "../Modals/ChangeRoom.jsx";
 import ExtendStay from "../Modals/ExtendStay.jsx";
+import restClient from "../utils/restClient.js";
+import ConfirmModal from "../components/ConfirmModal.jsx";
+import LoadingScreen from "../components/LoadingScreen.jsx";
+import {getData, roomList} from "../utils/index.js";
 
 const statusStyles = {
     ACTIVE: "bg-green-100 text-green-800",
@@ -19,10 +23,10 @@ const paymentStatusStyles = {
     UNPAID: "bg-red-100 text-red-800",
 };
 
-const handleChargeServices = (servicesCharged) => {
-    console.log("Charged services:", servicesCharged);
-    // You can send this data to API or update local state
-};
+// const handleChargeServices = (servicesCharged) => {
+//     console.log("Charged services:", servicesCharged);
+//
+// };
 
 const SingleGuestLog = () => {
     const { state } = useLocation();
@@ -32,10 +36,19 @@ const SingleGuestLog = () => {
 
     console.log(id);
 
-    const guest = state || {};
-    console.log(guest);
+    const [guest, setGuest] =useState(state);
 
-// Dummy functions for room actions
+    const [showRoomServiceModal, setShowRoomServiceModal] = useState(false);
+    const [roomTypes, setRoomTypes] = useState([]);
+    const [availableRooms, setAvailableRooms] = useState({});
+    const [showAddRoom, setShowAddRoom] = useState(false);
+    const [showExtendStay, setExtendStay] = useState(false);
+    const [showChangeRoom, setChangeRoom] = useState(false);
+    const [loading, setLoading] = useState(false);
+    const [showModal, setShowModal] = useState(false);
+    const navigate = useNavigate();
+    const [modalMessage, setModalMessage] = useState("");
+
     const onAddRoom = () => {
         setShowAddRoom(true);
     };
@@ -46,23 +59,94 @@ const SingleGuestLog = () => {
         setExtendStay(true);
     };
 
-    const [showRoomServiceModal, setShowRoomServiceModal] = useState(false);
-    const [showAddRoom, setShowAddRoom] = useState(false);
-    const [showExtendStay, setExtendStay] = useState(false);
-    const [showChangeRoom, setChangeRoom] = useState(false);
-
-    const roomTypes=[
-            { type: 'Standard', price: 15000 },
-        { type: 'Deluxe', price: 25000 },
-    ]
-    const availableRooms={
-        Standard: ['101', '102', '103'],
-            Deluxe: ['201', '202'],
+    const onSubmit = async () => {
+        setLoading(true);
+        try {
+            const currentRoom = guest.guestLogRooms[0].room.roomNumber;
+            const res = await restClient.get(`/guestLog/find?roomNumber=${currentRoom}`, {}, navigate);
+            // console.log(res)
+            if(res.responseHeader.responseCode === "00") {
+                setGuest(res.data);
+            }
+            else{
+                setModalMessage(res.error ?? "Something went wrong!");
+                setShowModal(true);
+            }
+        }
+            // eslint-disable-next-line no-unused-vars
+        catch (error) {
+            setModalMessage("Something went wrong!");
+            setShowModal(true);
+        }
+        finally {
+            setLoading(false);
+        }
     }
-    const currentRooms = ['101', '102']
+
+
+    useEffect(() => {
+        const fetchRooms = async () => {
+            const fetchedRoomDtoList = await roomList(navigate);
+            const fetchedRoomPriceData = await getData("/roomPrices/all", navigate);
+
+
+            if (!fetchedRoomDtoList || !fetchedRoomPriceData) {
+                setModalMessage("Something went wrong!");
+                setShowModal(true);
+                return
+            }
+
+
+            // setRoomDtoList(fetchedRoomDtoList);
+            // setRoomPriceData(fetchedRoomPriceData);
+            //
+            // console.log("roomDto",roomDtoList);
+            // console.log("roomPriceData",roomPriceData)
+
+            const roomPriceMap = {
+                EXECUTIVE_SUITE: fetchedRoomPriceData.executiveSuitePrice,
+                BUSINESS_SUITE_A: fetchedRoomPriceData.businessSuiteAPrice,
+                BUSINESS_SUITE_B: fetchedRoomPriceData.businessSuiteBPrice,
+                EXECUTIVE_DELUXE: fetchedRoomPriceData.executiveDeluxePrice,
+                DELUXE: fetchedRoomPriceData.deluxePrice,
+                CLASSIC: fetchedRoomPriceData.classicPrice,
+            };
+
+            const roomTypesSet = new Set();
+            const tempAvailableRooms = {};
+
+            fetchedRoomDtoList?.forEach(room => {
+                const type = room.roomType;
+
+                if (!roomPriceMap[type]) return;
+
+                roomTypesSet.add(type);
+
+                if (room.roomStatus === "AVAILABLE") {
+                    if (!tempAvailableRooms[type]) {
+                        tempAvailableRooms[type] = [];
+                    }
+                    tempAvailableRooms[type].push(String(room.roomNumber));
+                }
+            });
+
+            const roomTypesArray = Array.from(roomTypesSet).map(type => ({
+                type,
+                price: roomPriceMap[type]
+            }));
+
+            setRoomTypes(roomTypesArray);
+            setAvailableRooms(tempAvailableRooms);
+        };
+
+        fetchRooms();
+    }, []);
+
+    const currentRooms = guest.guestLogRooms.map(r => r.room.roomNumber)
 
     return (
         <div className="p-6 max-w-5xl mx-auto">
+            {loading && <LoadingScreen />}
             <BackButton/>
 
             {/* Guest Info Section */}
@@ -158,7 +242,8 @@ const SingleGuestLog = () => {
                 {showRoomServiceModal && (
                     <RoomServiceModal
                         onClose={() => setShowRoomServiceModal(false)}
-                        onCharge={handleChargeServices}
+                        guest={guest}
+                        onCharge={onSubmit}
                     />
                 )}
 
@@ -168,6 +253,8 @@ const SingleGuestLog = () => {
                     roomTypes={roomTypes}
                     availableRooms={availableRooms}
                     onClose={() => setShowAddRoom(false)}
+                    guest={guest}
+                    onSubmit={onSubmit}
                 />
             )}
 
@@ -177,12 +264,22 @@ const SingleGuestLog = () => {
                     roomTypes={roomTypes}
                     availableRooms={availableRooms}
                     onClose={() => setChangeRoom(false)}
+                    onSubmit={onSubmit}
                 />
             )}
 
             {showExtendStay && (
                 <ExtendStay
                     onClose={() => setExtendStay(false)}
+                    guest={guest}
+                    onSubmit={onSubmit}
+                />
+            )}
+
+            {showModal && (
+                <ConfirmModal
+                    message={modalMessage}
+                    onCancel={() => setShowModal(false)}
                 />
             )}
         </div>

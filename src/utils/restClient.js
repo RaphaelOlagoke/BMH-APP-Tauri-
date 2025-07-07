@@ -33,7 +33,7 @@ async function request(endpoint, method = 'GET', data = null, includeToken = tru
     try {
         const res = await fetch(`${BASE_URL}${endpoint}`, config);
 
-        if (res.status === 401 || res.status === 403) {
+        if (res.status === 401 || res.status === 403 ) {
             handleExpiredToken(navigate);
             return null;
         }

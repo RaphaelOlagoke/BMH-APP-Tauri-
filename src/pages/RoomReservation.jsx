@@ -6,30 +6,37 @@ import {Link, useNavigate} from "react-router-dom";
 import {LogIn, LogOut} from "lucide-react";
 import Table from "../components/Table.jsx";
 import GuestLogsFilterForm from "../components/GuestLogsFilterForm.jsx";
-import {menuItems} from "../utils/index.js";
+import {fetchRoomsData, loadRoomsData, menuItems} from "../utils/index.js";
 import RoomReservationFilter from "../components/RoomReservationFilter.jsx";
 import CreateButton from "../components/CreateButton.jsx";
 import CreateReservation from "../Modals/CreateReservation.jsx";
+import LoadingScreen from "../components/LoadingScreen.jsx";
+import restClient from "../utils/restClient.js";
 
 const RoomReservation = () => {
     const [startDate, setStartDate] = useState('');
     const [endDate, setEndDate] = useState('');
-    const [page, setPage] = useState(1);
+    const [page, setPage] = useState(0);
     const [data, setData] = useState([]);
     const [pageCount, setPageCount] = useState(1);
 
     const [modalMessage, setModalMessage] = useState('');
     const [showModal, setShowModal] = useState(false);
     const [showCreateModal, setShowCreateModal] = useState(false);
+    const [loading, setLoading] = useState(false);
+    const [roomOptions, setRoomOptions] = useState([]);
 
-    const [selectedRoom, setSelectedRoom] = useState('');
+    const [selectedRoom, setSelectedRoom] = useState(0);
     const [selectedStatus, setSelectedStatus] = useState('');
+    const navigate = useNavigate();
+    const [roomTypes, setRoomTypes] = useState([]);
+    const [availableRooms, setAvailableRooms] = useState({});
 
-    const roomOptions = ["101", "102", "103", "104", "105", "106", "107", "108", "109"];
-    const statusOptions = ["Active", "Inactive"];
+    // const roomOptions = ["101", "102", "103", "104", "105", "106", "107", "108", "109"];
+    const statusOptions = ["ACTIVE", "COMPLETE", "CANCELED"];
 
     const handleEdit = (reservation) => {
-        if (reservation.status === "active") {
+        if (reservation.status === "ACTIVE") {
             navigate('/check-in', {
                 state: { reservation }
             });
@@ -40,65 +47,66 @@ const RoomReservation = () => {
     };
 
 
-    const totalPages = 20;
+    const size = 20;
+
+    const statusStyles = {
+        ACTIVE: "bg-green-100 text-green-800",
+        COMPLETE: "bg-blue-200 text-blue-700",
+        CANCELED: "bg-red-200 text-red-700",
+    };
 
     const columns = [
-        { label: "Guest Name", accessor: "name" },
+        { label: "Guest Name", accessor: "guestName" },
         { label: "Status", accessor: "status", render: (value) => (
-                <span className={`px-2 py-1 text-xs font-medium rounded-full ${value === 'active' ? 'bg-green-100 text-green-800' : 'bg-gray-200 text-gray-700'}`}>
-                {value.charAt(0).toUpperCase() + value.slice(1)}
+                <span className={`px-2 py-1 text-xs font-medium rounded-full ${statusStyles[value]}`}>
+                {value}
             </span>
             )},
-        { label: "Date", accessor: "date" },
-        { label: "Phone number", accessor: "phone" },
-        { label: "Room(s)", accessor: "rooms", render: (rooms) => rooms.join(', ') },
-    ];
-
-    const dataList = [
-        {
-            ref: "g1",
-            name: "John Doe",
-            status: "active",
-            phone: "08012345678",
-            roomList: [{number: "101", type: "Standard", price: 5000}, {number: "205", type: "Deluxe", price: 10000}],
-            rooms: ["101", "102"],
-            roomTypes: ["Standard", "Standard"],
-            date: "2025-06-28",
-        },
-        {
-            ref: "g2",
-            name: "Mary Smith",
-            status: "completed",
-            phone: "08199887766",
-            roomList: [{number: "103", type: "Deluxe", price: 10000}],
-            rooms: ["103"],
-            roomTypes: ["Deluxe"],
-            date: "2025-06-28",
-        },
-        {
-            ref: "g3",
-            name: "Alice Johnson",
-            status: "active",
-            phone: "08199887766",
-            rooms: ["104", "105"],
-            roomList: [{number: "104", type: "Suite", price: 15000}, {number: "105", type: "Suite", price: 15000}],
-            roomTypes: ["Suite", "Suite"],
-            date: "2025-06-28",
-        }
+        { label: "Date", accessor: "createdDateTime" },
+        { label: "Phone number", accessor: "guestPhoneNumber" },
+        { label: "Room(s)", accessor: "roomNumbers", render: (rooms) => rooms.map(r => r.roomNumber).join(', ') },
     ];
 
     const fetchData = async (page) => {
         // const res = await fetch(`/api/items?page=${page}`);
         // const { data, totalPages } = await res.json();
 
-        console.log(page);
-        setData(dataList);
-        setPageCount(totalPages);
+        setLoading(true);
+        try {
+            const startDateTime = startDate ? `${startDate}T00:00:00` : null;
+            const endDateTime = endDate ? `${endDate}T23:59:59` : null;
+
+            const res = await restClient.post(`/reservation/filter?page=${page}&size=${size}`, {
+                status: selectedStatus || null,
+                startDate: startDateTime,
+                endDate: endDateTime,
+                roomNumber: selectedRoom || 0,
+            },navigate);
+            // console.log(res)
+            if (res?.responseHeader?.responseCode === "00") {
+                setData(res.data);
+                if (res.totalPages !== pageCount) {
+                    setPageCount(res.totalPages);
+                }
+            }
+        } catch (error) {
+            console.log(error);
+        } finally {
+            setLoading(false);
+        }
     };
 
     useEffect(() => {
         fetchData(page);
     }, [page]);
+
+    useEffect(() => {
+        const fetchRoomsAndPrices = async () => {
+            await fetchRoomsData(setModalMessage, setShowModal,setRoomTypes, setAvailableRooms,navigate);
+        }
+        fetchRoomsAndPrices()
+        loadRoomsData(setLoading, setRoomOptions, navigate, "/room/");
+    },[])
 
     const handlePageChange = (newPage) => {
         if (newPage >= 1 && newPage <= pageCount) {
@@ -107,29 +115,20 @@ const RoomReservation = () => {
     };
 
     const onSubmit = () => {
-
+        setPage(0);
+        fetchData(page)
     };
 
-    const roomTypes = [
-        { type: 'Standard', price: 20000 },
-        { type: 'Deluxe', price: 30000 },
-        { type: 'Suite', price: 50000 },
-    ];
-
-    const availableRooms = {
-        Standard: ['101', '102'],
-        Deluxe: ['201'],
-        Suite: ['301', '302'],
-    };
 
     const handleSubmitReservation = (data) => {
         console.log('Reservation Submitted:', data);
-        // Send to API or update state
+        setPage(0);
+        fetchData(page)
     };
 
-    const navigate = useNavigate();
     return (
         <div className="flex" >
+            {loading && <LoadingScreen />}
             <Sidebar menuItems={menuItems}/>
 
             <main className="main ps-20 py-6 mt-3 text-2xl w-full">

@@ -39,7 +39,7 @@ export const syncInvoiceImg = sync;
 
 
 export const menuItems = [
-    { label: 'Guest Logs', icon: FileText, path: '/' , roles: ["SUPER_ADMIN","ADMIN", "MANAGER", "ACCOUNTS", "RECEPTIONIST"]},
+    { label: 'Guest Logs', icon: FileText, path: '/home' , roles: ["SUPER_ADMIN","ADMIN", "MANAGER", "ACCOUNTS", "RECEPTIONIST"]},
     { label: 'Room Reservation', icon: BedDouble, path: '/room-reservation', roles: ["SUPER_ADMIN","ADMIN", "MANAGER", "ACCOUNTS", "RECEPTIONIST"]},
     { label: 'Hall Reservation', icon: CalendarDays, path: '/hall-reservation' , roles: ["SUPER_ADMIN","ADMIN", "MANAGER", "ACCOUNTS", "RECEPTIONIST"]},
     { label: 'Rooms', icon: Building2, path: '/rooms', roles: ["SUPER_ADMIN"] },
@@ -54,11 +54,25 @@ export const menuItems = [
     { label: 'Users', icon: Users, path: '/users', roles: ["SUPER_ADMIN"] },
 ];
 
-export const loadRoomsData = async (setLoading, setRoomOptions, navigate) => {
+export const ID_TYPES = ['DRIVER_LICENSE', 'PASSPORT', 'NIN', 'VOTER_CARD'];
+
+export const PAYMENT_METHODS = ['CARD', 'CASH', 'TRANSFER'];
+
+export const HALL_TYPES = ["CONFERENCE_ROOM", "MEETING_ROOM", "MEETING_HALL"];
+export const HALL_STATUS = ["ACTIVE", "COMPLETE", "CANCELED", "UPCOMING"];
+export const PAYMENT_STATUS = ["PAID", "UNPAID", "DEBIT", "REFUNDED"];
+
+export const ROOM_TYPES = ["EXECUTIVE_SUITE", "BUSINESS_SUITE_A", "BUSINESS_SUITE_B", "EXECUTIVE_DELUXE", "DELUXE", "CLASSIC"];
+export const ROOM_STATUS = ["AVAILABLE", "OCCUPIED"];
+
+export const USER = JSON.parse(localStorage.getItem('user'));
+export const USER_NAME = USER ? USER.username : null;
+
+export const loadRoomsData = async (setLoading, setRoomOptions, navigate, endpoint = '/room/all') => {
     setLoading(true);
     try {
-        const res = await restClient.get('/room/all',navigate);
-        console.log(res)
+        const res = await restClient.get(endpoint,navigate);
+        // console.log(res)
         if(res.data && res.responseHeader.responseCode === "00") {
             const data = res.data
             setRoomOptions(data.map(room => room.roomNumber))
@@ -72,10 +86,11 @@ export const loadRoomsData = async (setLoading, setRoomOptions, navigate) => {
     }
 }
 
-export const roomList = async (navigate) => {
+export const roomList = async (navigate,endpoint = '/room/status?roomStatus=AVAILABLE') => {
     try {
-        const res = await restClient.get('/room/all',navigate);
-        console.log(res)
+        const res = await restClient.get(endpoint,navigate);
+        // console.log(res)
+        // console.log("API Response", res);
         if(res.data && res.responseHeader.responseCode === "00") {
             return res.data;
         }
@@ -86,11 +101,58 @@ export const roomList = async (navigate) => {
     }
 }
 
+export const fetchRoomsData = async (setModalMessage, setShowMissingFields,setRoomTypes, setAvailableRooms,navigate) => {
+    const roomDtoList = await roomList(navigate);
+
+    const roomPriceData = await getData("/roomPrices/all",navigate)
+    if(!roomPriceData  || !roomDtoList){
+        setModalMessage("Something went wrong!");
+        setShowMissingFields(true);
+        return;
+    }
+
+    const roomPriceMap = {
+        EXECUTIVE_SUITE: roomPriceData.executiveSuitePrice,
+        BUSINESS_SUITE_A: roomPriceData.businessSuiteAPrice,
+        BUSINESS_SUITE_B: roomPriceData.businessSuiteBPrice,
+        EXECUTIVE_DELUXE: roomPriceData.executiveDeluxePrice,
+        DELUXE: roomPriceData.deluxePrice,
+        CLASSIC: roomPriceData.classicPrice,
+    };
+
+    const roomTypesSet = new Set();
+    const tempAvailableRooms = {};
+
+    roomDtoList?.forEach(room => {
+        const type = room.roomType;
+
+        if (!roomPriceMap[type]) return;
+
+        roomTypesSet.add(type);
+
+        if (room.roomStatus === "AVAILABLE") {
+            if (!tempAvailableRooms[type]) {
+                tempAvailableRooms[type] = [];
+            }
+            tempAvailableRooms[type].push(String(room.roomNumber));
+        }
+    });
+
+    const roomTypesArray = Array.from(roomTypesSet).map(type => ({
+        type,
+        price: roomPriceMap[type]
+    }));
+
+    setRoomTypes(roomTypesArray);
+    setAvailableRooms(tempAvailableRooms);
+};
+
+
 export const getData = async (endpoint,navigate) => {
     try {
         const res = await restClient.get(endpoint,navigate);
-        console.log(res)
-        if(res.data && res.responseHeader.responseCode === "00") {
+        // console.log(res)
+        if(res.responseHeader.responseCode === "00") {
             return res.data;
         }
     }
@@ -103,7 +165,7 @@ export const getData = async (endpoint,navigate) => {
 export const postData = async (endpoint,data,navigate) => {
     try {
         const res = await restClient.post(endpoint,data,navigate);
-        console.log(res)
+        // console.log(res)
         if(res.data && res.responseHeader.responseCode === "00") {
             return res.data;
         }

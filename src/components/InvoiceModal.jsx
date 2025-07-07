@@ -1,5 +1,5 @@
 import React, {useState} from 'react';
-import {CheckCircle} from "lucide-react";
+import {CheckCircle, Download, Printer} from "lucide-react";
 import ConfirmModal from "./ConfirmModal.jsx";
 
 
@@ -13,10 +13,13 @@ const InvoiceModal = ({ invoices, onClose }) => {
     };
 
 
-    const totalOutstanding = invoices.reduce(
-        (sum, invoice) => sum + (invoice.totalAmount - (invoice.amountPaid + invoice.discountAmount)),
-        0
-    );
+    // const totalOutstanding = invoices.reduce(
+    //     (sum, invoice) => sum + (invoice.totalAmount - (invoice.amountPaid + invoice.discountAmount)),
+    //     0
+    // );
+
+    const allPaid = invoices.every(invoice => invoice.paymentStatus === "PAID");
+
 
     const paymentMethods = ["CASH", "CARD", "TRANSFER"]
 
@@ -44,7 +47,7 @@ const InvoiceModal = ({ invoices, onClose }) => {
                     </select>
                 </div>
 
-                {totalOutstanding === 0 ? (
+                {allPaid ? (
                     <span className="px-3 py-3 h-max rounded-2xl bg-green-100 text-green-800 text-sm">
                             All Paid
                         </span>
@@ -122,8 +125,8 @@ const InvoiceModal = ({ invoices, onClose }) => {
                     </div>
 
                     <div className="mt-4 flex justify-end gap-3">
-                        <button className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">Download</button>
-                        <button className="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700">Print</button>
+                        <button className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 flex items-center gap-2"><Download size={16}/> Download</button>
+                        <button className="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700 flex items-center gap-2"><Printer size={16} /> Print</button>
                     </div>
 
                     <hr className="my-6 border-6 border-black" />

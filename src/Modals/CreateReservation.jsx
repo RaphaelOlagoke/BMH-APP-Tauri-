@@ -1,13 +1,16 @@
 import React, { useState } from 'react';
 import { X, Trash2 } from 'lucide-react';
 import ConfirmModal from "../components/ConfirmModal.jsx";
+import LoadingScreen from "../components/LoadingScreen.jsx";
+import {useNavigate} from "react-router-dom";
+import restClient from "../utils/restClient.js";
 
 
 const CreateReservation = ({
       roomTypes = [],
       availableRooms = {},
-      onSubmit,
-      onClose
+      onClose,
+    onSubmit
   }) => {
     const [guest, setGuest] = useState({ name: '', phone: '' });
     const [roomType, setRoomType] = useState('');
@@ -16,6 +19,11 @@ const CreateReservation = ({
     const [currentPrice, setCurrentPrice] = useState(0);
     const [showConfirm, setShowConfirm] = useState(false);
     const [showMissingFields, setShowMissingFields] = useState(false);
+    const [loading, setLoading] = useState(false);
+    const [showSuccessModal, setShowSuccessModal] = useState(false);
+    const navigate = useNavigate();
+    const [modalMessage, setModalMessage] = useState("");
+
 
     const handleGuestChange = (e) => {
         const { name, value } = e.target;
@@ -44,6 +52,7 @@ const CreateReservation = ({
     const handleSubmit = (e) => {
         e.preventDefault();
         if (!guest.name || !guest.phone || selectedRooms.length === 0) {
+            setModalMessage("Please fill all required fields")
             setShowMissingFields(true);
         }
         else{
@@ -51,16 +60,47 @@ const CreateReservation = ({
         }
     };
 
-    const confirmSubmission = () => {
-        onSubmit({ guest, selectedRooms });
+    const confirmSubmission = async () => {
         setShowConfirm(false);
-        onClose();
+        setLoading(true);
+        const createReservationRequest = {
+            guestName: guest.name,
+            roomNumbers: selectedRooms.map(r => r.room),
+            phoneNumber: guest.phone
+        };
+        console.log(createReservationRequest);
+        try {
+            const res = await restClient.post("/reservation/", createReservationRequest, navigate);
+            console.log(res)
+            if(res.data && res.responseHeader.responseCode === "00") {
+                setShowSuccessModal(true);
+            }
+            else{
+                setModalMessage(res.error ?? "Something went wrong!");
+                setShowMissingFields(true);
+            }
+        }
+            // eslint-disable-next-line no-unused-vars
+        catch (error) {
+            setModalMessage("Something went wrong!");
+            setShowMissingFields(true);
+        }
+        finally {
+            setLoading(false);
+        }
     };
+
+    const onSuccess = () => {
+        setShowSuccessModal(false)
+        onClose();
+        onSubmit();
+    }
 
     const totalPrice = selectedRooms.reduce((sum, r) => sum + r.price, 0);
 
     return (
         <div className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50">
+            {loading && <LoadingScreen />}
             <form
                 onSubmit={handleSubmit}
                 className="bg-white w-full max-w-3xl p-6 rounded shadow-lg max-h-[90vh] overflow-y-auto"
@@ -197,8 +237,16 @@ const CreateReservation = ({
             {/* ✅ Missing Fields Modal */}
             {showMissingFields && (
                 <ConfirmModal
-                    message="Please fill all required fields"
+                    message={modalMessage}
                     onCancel={() => setShowMissingFields(false)}
+                />
+            )}
+
+            {/* ✅ On Successful */}
+            {showSuccessModal && (
+                <ConfirmModal
+                    message="Reservation Created"
+                    onCancel={() => onSuccess()}
                 />
             )}
         </div>

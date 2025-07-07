@@ -1,10 +1,13 @@
 import React, { useState } from 'react';
 import { Archive, Edit3, CheckCircle } from 'lucide-react';
-import {useLocation, useParams} from "react-router-dom";
+import {useLocation, useNavigate, useParams} from "react-router-dom";
 import BackButton from "../components/BackButton.jsx";
 import ConfirmModal from "../components/ConfirmModal.jsx";
 import AddRoom from "../Modals/AddRoom.jsx";
 import UpdateRoom from "../Modals/UpdateRoom.jsx";
+import {ROOM_TYPES, USER} from "../utils/index.js";
+import restClient from "../utils/restClient.js";
+import LoadingScreen from "../components/LoadingScreen.jsx";
 
 const SingleRoom = () => {
     const { state } = useLocation();
@@ -12,24 +15,41 @@ const SingleRoom = () => {
 
     console.log(id);
 
-    const room = state?.room || {};
+    const [room, setRoom] = useState(state?.room);
 
     const [description, setDescription] = useState('');
     const [markingCompleteId, setMarkingCompleteId] = useState(null);
     const [completionCost, setCompletionCost] = useState('');
     const [showUpdateRoom, setShowUpdateRoom] = useState(false);
     const [showArchiveRoom, setShowArchiveRoom] = useState(false);
+    const [modalMessage, setModalMessage] = useState("");
+    const [selectedType, setSelectedType] = useState(room.roomType || '');
+    const [loading, setLoading] = useState(false);
+    const [showSuccessModal, setShowSuccessModal] = useState(false);
+    const [showError, setShowError] = useState(false);
+    const navigate = useNavigate();
 
     const [showConfirm, setShowConfirm] = useState(false);
 
-    const roomTypes = ['STANDARD','SINGLE', 'DOUBLE', 'DELUXE', 'SUITE'];
+    const roomTypes = ROOM_TYPES;
 
     const onArchive = () => {
+        setModalMessage(`Are you sure you want to archive Room ${room.roomNumber}?`)
+        setShowArchiveRoom(true);
+    };
+
+    const onUnArchive = () => {
+        setModalMessage(`Are you sure you want to unarchive Room ${room.roomNumber}?`)
         setShowArchiveRoom(true);
     };
     const onUpdateRoomStatus= () => {
         setShowUpdateRoom(true);
     };
+
+    const onUpdateRoom = () => {
+        state.room.roomType = selectedType;
+        setRoom(state.room);
+    }
     const onAddMaintenance= () => {
 
     };
@@ -51,11 +71,38 @@ const SingleRoom = () => {
         setShowConfirm(false);
     };
 
-    const confirmArchiveRoom = () => {
+    const confirmArchiveRoom = async () => {
         console.log(`Archiving Room: ${room.roomNumber}`);
-        onAddMaintenance({ description });
         setShowArchiveRoom(false);
+        setLoading(true);
+        try {
+            var endpoint = room.archived ? "/room/unarchive" : "/room/archive"
+            const res = await restClient.post(`${endpoint}?roomNumber=${room.roomNumber}`, {}, navigate);
+            console.log(res)
+            if(res.responseHeader.responseCode === "00") {
+                setModalMessage(room.archived ? "Room unarchived Successfully" : "Room Archived Successfully" );
+                setShowSuccessModal(true);
+            }
+            else{
+                setModalMessage(res.error ?? "Something went wrong!");
+                setShowError(true);
+            }
+        }
+            // eslint-disable-next-line no-unused-vars
+        catch (error) {
+            setModalMessage("Something went wrong!");
+            setShowError(true);
+        }
+        finally {
+            setLoading(false);
+        }
     };
+
+    const onArchiveSuccess = () => {
+        setShowSuccessModal(false)
+        state.room.archived = !state.room.archived;
+        setRoom(state.room);
+    }
 
     const handleComplete = (id) => {
         if (completionCost) {
@@ -68,6 +115,7 @@ const SingleRoom = () => {
     return (
         <div>
             <div className="p-6 max-w-6xl mx-auto space-y-6 text-start">
+                {loading && <LoadingScreen />}
                 <BackButton/>
                 {/* Room Status Header */}
                 <div className="flex items-center justify-between">
@@ -82,7 +130,8 @@ const SingleRoom = () => {
           >
             {room.roomStatus}
           </span>
-
+                {USER.department === "SUPER_ADMIN" && (
+                    <div className="flex items-center gap-3">
                         <button
                             onClick={() => onUpdateRoomStatus(room.id)}
                             className="text-blue-600 hover:underline text-sm flex items-center gap-1"
@@ -91,7 +140,7 @@ const SingleRoom = () => {
                             Update
                         </button>
 
-                        {!room.isArchived && (
+                        {!room.archived ? (
                             <button
                                 onClick={() => onArchive(room.id)}
                                 className="text-red-600 hover:underline text-sm flex items-center gap-1"
@@ -99,8 +148,19 @@ const SingleRoom = () => {
                                 <Archive size={16} />
                                 Archive
                             </button>
+                        ) : (
+                            <button
+                                onClick={() => onUnArchive(room.id)}
+                                className="text-red-600 hover:underline text-sm flex items-center gap-1"
+                            >
+                                <Archive size={16} />
+                                UnArchive
+                            </button>
                         )}
                     </div>
+                )}
+
+            </div>
                 </div>
 
                 {/* Room Details */}
@@ -109,7 +169,7 @@ const SingleRoom = () => {
                     <div><strong>Room Type:</strong> {room.roomType}</div>
                     <div><strong>Needs Cleaning:</strong> {room.needsCleaning ? 'Yes' : 'No'}</div>
                     <div><strong>Needs Maintenance:</strong> {room.needsMaintenance ? 'Yes' : 'No'}</div>
-                    <div><strong>Archived:</strong> {room.isArchived ? 'Yes' : 'No'}</div>
+                    <div><strong>Archived:</strong> {room.archived ? 'Yes' : 'No'}</div>
                 </div>
 
                 {/* Maintenance Table */}
@@ -218,7 +278,7 @@ const SingleRoom = () => {
 
             {showArchiveRoom && (
                 <ConfirmModal
-                    message={`Are you sure you want to archive Room ${room.roomNumber}?`}
+                    message={modalMessage}
                     onConfirm={confirmArchiveRoom}
                     onCancel={() => setShowArchiveRoom(false)}
                 />
@@ -229,6 +289,25 @@ const SingleRoom = () => {
                     roomTypes={roomTypes}
                     currentType={room.roomType}
                     onClose={() => setShowUpdateRoom(false)}
+                    onUpdate={onUpdateRoom}
+                    selectedType={selectedType}
+                    setSelectedType={setSelectedType}
+                    room={room}
+                />
+            )}
+
+            {/* ✅ Missing Fields Modal */}
+            {showError && (
+                <ConfirmModal
+                    message={modalMessage}
+                    onCancel={() => setShowError(false)}
+                />
+            )}
+
+            {showSuccessModal && (
+                <ConfirmModal
+                    message={modalMessage}
+                    onCancel={() => onArchiveSuccess()}
                 />
             )}
 

@@ -2,12 +2,15 @@ import React, {useEffect, useState} from 'react'
 import Sidebar from "../components/Sidebar.jsx";
 import Header from "../components/Header.jsx";
 import Table from "../components/Table.jsx";
-import {menuItems} from "../utils/index.js";
+import {menuItems, ROOM_STATUS, ROOM_TYPES} from "../utils/index.js";
 import CreateButton from "../components/CreateButton.jsx";
 import CreateReservation from "../Modals/CreateReservation.jsx";
 import RoomsFilter from "../components/RoomsFilter.jsx";
 import CreateRoom from "../Modals/CreateRoom.jsx";
 import {useNavigate} from "react-router-dom";
+import restClient from "../utils/restClient.js";
+import ConfirmModal from "../components/ConfirmModal.jsx";
+import LoadingScreen from "../components/LoadingScreen.jsx";
 
 const Rooms = () => {
     const navigate = useNavigate();
@@ -16,7 +19,7 @@ const Rooms = () => {
     const [needsCleaning, setNeedsCleaning] = useState('');
     const [needsMaintenance, setNeedsMaintenance] = useState('');
     const [archived, setArchived] = useState('');
-    const [page, setPage] = useState(1);
+    const [page, setPage] = useState(0);
     const [data, setData] = useState([]);
     const [pageCount, setPageCount] = useState(1);
 
@@ -24,20 +27,23 @@ const Rooms = () => {
 
     const [selectedRoom, setSelectedRoom] = useState('');
     const [selectedStatus, setSelectedStatus] = useState('');
+    const [loading, setLoading] = useState(false);
+    const [showModal, setShowModal] = useState(false);
+    const [roomOptions, setRoomOptions] = useState([]);
+    const [modalMessage, setModalMessage] = useState("");
 
-    const roomOptions = ["101", "102", "103", "104", "105", "106", "107", "108", "109"];
-    const statusOptions = ["Active", "Inactive"];
-    const roomTypeOptions = ["Standard", "Deluxe"];
+    const statusOptions = ROOM_STATUS;
+    const roomTypeOptions = ROOM_TYPES;
 
 
-    const totalPages = 20;
+    const size = 20;
 
     const columns = [
         { label: "Room Number", accessor: "roomNumber" },
         { label: "Type", accessor: "roomType" },
         { label: "Status", accessor: "roomStatus", render: (value) => (
                 <span className={`px-2 py-1 text-xs font-medium rounded-full ${value === 'AVAILABLE' ? 'bg-green-100 text-green-800' : 'bg-blue-200 text-blue-700'}`}>
-                {value.charAt(0).toUpperCase() + value.slice(1)}
+                {value}
             </span>
             )},
         { label: "Needs Cleaning", accessor: "needsCleaning", render: (value) => (
@@ -57,80 +63,65 @@ const Rooms = () => {
             )},
     ];
 
-    const dataList = [
-        {
-            roomNumber: 101,
-            roomType: "STANDARD", // RoomType enum
-            roomStatus: "OCCUPIED", // RoomStatus enum
-            needsCleaning: true,
-            needsMaintenance: false,
-            archived: false,
-            maintenance: [
-                {
-                    ref: "MT001",
-                    description: "AC not cooling",
-                    cost: 5000,
-                    status: "PENDING", // MaintenanceStatus enum
-                    createdDateTime: "2025-06-20T09:30:00",
-                    lastModifiedDateTime: "2025-06-21T10:00:00"
+    useEffect(() => {
+        const fetchRooms = async () => {
+            setLoading(true);
+            try {
+                const res = await restClient.get("/room/",navigate);
+                // console.log(res)
+                if(res.responseHeader.responseCode === "00") {
+                    const data = res.data;
+                    console.log("Room Data",data)
+                    setRoomOptions(data.map(room => room.roomNumber))
+                    if (res.totalPages !== pageCount) {
+                        setPageCount(res.totalPages);
+                    }
                 }
-            ]
-        },
-        {
-            roomNumber: 205,
-            roomType: "DELUXE",
-            roomStatus: "AVAILABLE",
-            needsCleaning: false,
-            needsMaintenance: false,
-            archived: false,
-            maintenance: []
-        },
-        {
-            roomNumber: 103,
-            roomType: "DELUXE",
-            roomStatus: "MAINTENANCE",
-            needsCleaning: false,
-            needsMaintenance: true,
-            archived: false,
-            maintenance: [
-                {
-                    ref: "MT002",
-                    description: "Leaky faucet",
-                    cost: 2000,
-                    status: "COMPLETED",
-                    createdDateTime: "2025-06-22T08:00:00",
-                    lastModifiedDateTime: "2025-06-23T11:45:00"
-                }
-            ]
-        },
-        {
-            roomNumber: 104,
-            roomType: "SUITE",
-            roomStatus: "OCCUPIED",
-            needsCleaning: true,
-            needsMaintenance: false,
-            archived: false,
-            maintenance: []
-        },
-        {
-            roomNumber: 105,
-            roomType: "SUITE",
-            roomStatus: "AVAILABLE",
-            needsCleaning: false,
-            needsMaintenance: false,
-            archived: false,
-            maintenance: []
+            }
+                // eslint-disable-next-line no-unused-vars
+            catch (error) {
+                setModalMessage("Something went wrong!")
+                setShowModal(true)
+            }
+            finally {
+                setLoading(false);
+            }
         }
-    ];
+        fetchRooms();
+    }, [])
 
 
     const fetchData = async (page) => {
         // const res = await fetch(`/api/items?page=${page}`);
         // const { data, totalPages } = await res.json();
-
-        console.log(page);
-        setData(dataList);
-        setPageCount(totalPages);
+        setLoading(true);
+        try {
+            const res = await restClient.post(`/room/find?page=${page}&size=${size}`,{
+                roomStatus: selectedStatus || null,
+                roomNumber: selectedRoom || 0,
+                roomType: selectedType || null,
+                needsCleaning: (needsCleaning && (needsCleaning === "Yes")) || null,
+                needsMaintenance: (needsMaintenance && (needsMaintenance === "Yes")) || null,
+                archived: (archived && (archived === "Yes")) || null,
+            },navigate);
+            // console.log(res)
+            if(res.responseHeader.responseCode === "00") {
+                const data = res.data;
+                // console.log(data)
+                setData(data)
+                if (res.totalPages !== pageCount) {
+                    setPageCount(res.totalPages);
+                }
+            }
+        }
+            // eslint-disable-next-line no-unused-vars
+        catch (error) {
+            setModalMessage("Something went wrong!")
+            setShowModal(true)
+        }
+        finally {
+            setLoading(false);
+        }
     };
 
     useEffect(() => {
@@ -144,12 +135,19 @@ const Rooms = () => {
     };
 
     const onSubmit = () => {
+        setPage(0);
+        fetchData(page)
+    };
 
+    const handleCreateRoom= () => {
+        setPage(0);
+        fetchData(page)
     };
 
 
     return (
         <div className="flex" >
+            {loading && <LoadingScreen />}
             <Sidebar menuItems={menuItems}/>
 
             <main className="main ps-20 py-6 mt-3 text-2xl w-full">
@@ -163,6 +161,7 @@ const Rooms = () => {
                         <CreateRoom
                             roomTypes={roomTypeOptions}
                             onClose={() => setShowCreateModal(false)}
+                            onSubmit={handleCreateRoom}
                         />
                     )}
                 </div>
@@ -197,6 +196,12 @@ const Rooms = () => {
                     showEdit={true}
                 />
             </main>
+            {showModal && (
+                <ConfirmModal
+                    message={modalMessage}
+                    onCancel={() => setShowModal(false)}
+                />
+            )}
 
         </div>
     )
