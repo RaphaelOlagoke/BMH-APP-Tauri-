@@ -10,6 +10,9 @@ import CreateRoom from "../Modals/CreateRoom.jsx";
 import InventoryFilter from "../components/InventoryFilter.jsx";
 import UpdateInventory from "../Modals/UpdateInventory.jsx";
 import CreateInventory from "../Modals/CreateInventory.jsx";
+import restClient from "../utils/restClient.js";
+import LoadingScreen from "../components/LoadingScreen.jsx";
+import {useNavigate} from "react-router-dom";
 
 const Inventory = () => {
 
@@ -20,20 +23,22 @@ const Inventory = () => {
     const [startExpirationDate, setStartExpirationDate] = useState('');
     const [endExpirationDate, setEndExpirationDate] = useState('');
 
-    const [page, setPage] = useState(1);
+    const [page, setPage] = useState(0);
     const [data, setData] = useState([]);
     const [pageCount, setPageCount] = useState(1);
 
     const [showCreateModal, setShowCreateModal] = useState(false);
     const [showUpdateModal, setShowUpdateModal] = useState(false);
     const [inventoryItem, setInventoryItem] = useState({});
+    const [loading, setLoading] = useState(false);
+    const navigate = useNavigate();
 
 
     const categoryOptions = ["ROOM", "RESTAURANT_BAR", "HOUSE_KEEPING", "MAINTENANCE", "OFFICE_SUPPLIES", "OTHERS"];
 
     const reasonOptions = ["MISCOUNT", "DAMAGED", "EXPIRED", "RETURNED", "RESTOCK", "OTHER", "TRANSFERRED"];
 
-    const totalPages = 20;
+    const size = 20;
 
     const columns = [
         { label: "Name", accessor: "name" },
@@ -44,67 +49,36 @@ const Inventory = () => {
         { label: "Expired Date", accessor: "expiryDate"},
     ];
 
-    const dataList = [
-        {
-            ref: "STK001",
-            category: "MAINTENANCE", // StockItemCategory enum
-            name: "Glass Cleaner",
-            quantity: 25,
-            unit: "bottles",
-            expiryDate: "2025-09-15",
-            createdDateTime: "2025-06-01T08:30:00",
-            lastModifiedDateTime: "2025-06-10T10:00:00"
-        },
-        {
-            ref: "STK002",
-            category: "RESTAURANT_BAR",
-            name: "Instant Noodles",
-            quantity: 100,
-            unit: "packs",
-            expiryDate: "2025-12-31",
-            createdDateTime: "2025-06-05T09:00:00",
-            lastModifiedDateTime: "2025-06-15T11:00:00"
-        },
-        {
-            ref: "STK003",
-            category: "MAINTENANCE",
-            name: "LED Bulb",
-            quantity: 50,
-            unit: "pieces",
-            expiryDate: null, // No expiry for electrical items
-            createdDateTime: "2025-06-10T14:20:00",
-            lastModifiedDateTime: "2025-06-20T09:45:00"
-        },
-        {
-            ref: "STK004",
-            category: "MAINTENANCE",
-            name: "PVC Pipe",
-            quantity: 30,
-            unit: "meters",
-            expiryDate: null,
-            createdDateTime: "2025-06-12T13:00:00",
-            lastModifiedDateTime: "2025-06-25T15:30:00"
-        },
-        {
-            ref: "STK005",
-            category: "RESTAURANT_BAR",
-            name: "Mineral Water",
-            quantity: 200,
-            unit: "bottles",
-            expiryDate: "2025-08-01",
-            createdDateTime: "2025-06-15T07:45:00",
-            lastModifiedDateTime: "2025-06-28T08:10:00"
-        }
-    ];
-
 
     const fetchData = async (page) => {
         // const res = await fetch(`/api/items?page=${page}`);
         // const { data, totalPages } = await res.json();
 
-        console.log(page);
-        setData(dataList);
-        setPageCount(totalPages);
+        setLoading(true);
+        try {
+            const startDateTime = startDate ? `${startDate}T00:00:00` : null;
+            const endDateTime = endDate ? `${endDate}T23:59:59` : null;
+
+            const res = await restClient.post(`/inventory/filterStockItems?page=${page}&size=${size}&query=${tableSearchTerm}`, {
+                category: selectedCategory || null,
+                startExpiryDate: startExpirationDate || null,
+                endExpiryDate: endExpirationDate  || null,
+               startDate: startDateTime,
+                endDate: endDateTime,
+                quantity: 0
+            },navigate);
+            console.log(res)
+            if (res?.responseHeader?.responseCode === "00") {
+                setData(res.data);
+                if (res.totalPages !== pageCount) {
+                    setPageCount(res.totalPages);
+                }
+            }
+        } catch (error) {
+            console.log(error);
+        } finally {
+            setLoading(false);
+        }
     };
 
     useEffect(() => {
@@ -112,13 +86,13 @@ const Inventory = () => {
     }, [page]);
 
     const handlePageChange = (newPage) => {
-        if (newPage >= 1 && newPage <= pageCount) {
+        if (newPage >= 0 && newPage <= pageCount) {
             setPage(newPage);
         }
     };
 
     const onSubmit = () => {
-
+        fetchData(page)
     };
 
     const handleEdit = (item) => {
@@ -129,6 +103,7 @@ const Inventory = () => {
 
     return (
         <div className="flex" >
+            {loading && <LoadingScreen />}
             <Sidebar menuItems={menuItems}/>
 
             <main className="main ps-20 py-6 mt-3 text-2xl w-full">
@@ -142,6 +117,7 @@ const Inventory = () => {
                         <CreateInventory
                             categories={categoryOptions}
                             onClose={() => setShowCreateModal(false)}
+                            onSubmit={onSubmit}
                         />
                     )}
                 </div>
@@ -181,6 +157,7 @@ const Inventory = () => {
                     categories={categoryOptions}
                     reasons={reasonOptions}
                     onClose={() => setShowUpdateModal(false)}
+                    onSubmit={onSubmit}
                 />
             )}
         </div>

@@ -3,11 +3,15 @@ import Header from "../components/Header.jsx";
 import Table from "../components/Table.jsx";
 import InventoryHistoryFilter from "../components/InventoryHistoryFilter.jsx";
 import BackButton from "../components/BackButton.jsx";
+import restClient from "../utils/restClient.js";
+import {useNavigate} from "react-router-dom";
+import LoadingScreen from "../components/LoadingScreen.jsx";
+import {ArrowLeft} from "lucide-react";
 
 const InventoryHistory = () => {
     const [startDate, setStartDate] = useState('');
     const [endDate, setEndDate] = useState('');
-    const [page, setPage] = useState(1);
+    const [page, setPage] = useState(0);
     const [data, setData] = useState([]);
     const [pageCount, setPageCount] = useState(1);
 
@@ -16,6 +20,8 @@ const InventoryHistory = () => {
     const [selectedCategory, setSelectedCategory] = useState('');
     const [selectedAction, setSelectedAction] = useState('');
     const [selectedReason, setSelectedReason] = useState('');
+    const [loading, setLoading] = useState(false);
+    const navigate = useNavigate();
 
     const categoryOptions = ["ROOM", "RESTAURANT_BAR", "HOUSE_KEEPING", "MAINTENANCE", "OFFICE_SUPPLIES", "OTHERS"];
 
@@ -25,11 +31,11 @@ const InventoryHistory = () => {
 
     // const navigate = useNavigate();
 
-    const totalPages = 3;
+    const size = 20;
 
     const columns = [
         { label: "Ref", accessor: "ref" },
-        { label: "Name", accessor: "name" },
+        { label: "Name", accessor: "item", render: (value) => value.name },
         { label: "Quantity", accessor: "quantityMoved" },
         { label: "Unit", accessor: "unit" },
         { label: "Category", accessor: "department" },
@@ -42,118 +48,35 @@ const InventoryHistory = () => {
         { label: "Date", accessor: "timestamp" }
     ];
 
-    const dataList = [
-        {
-            ref: "SH001",
-            item: {
-                ref: "STK001",
-                category: "HOUSE_KEEPING",
-                name: "Glass Cleaner",
-                quantity: 25,
-                unit: "bottles",
-                expiryDate: "2025-09-15",
-                createdDateTime: "2025-06-01T08:30:00",
-                lastModifiedDateTime: "2025-06-10T10:00:00"
-            },
-            name: "Glass Cleaner",
-            department: "HOUSE_KEEPING",
-            quantityMoved: 5,
-            unit: "bottles",
-            reason: "CLEANING_TASK", // StockActionReason enum
-            action: "ADDED",       // StockHistoryAction enum
-            timestamp: "2025-06-11T09:00:00"
-        },
-        {
-            ref: "SH002",
-            item: {
-                ref: "STK002",
-                category: "RESTAURANT_BAR",
-                name: "Instant Noodles",
-                quantity: 100,
-                unit: "packs",
-                expiryDate: "2025-12-31",
-                createdDateTime: "2025-06-05T09:00:00",
-                lastModifiedDateTime: "2025-06-15T11:00:00"
-            },
-            name: "Instant Noodles",
-            department: "RESTAURANT_BAR",
-            quantityMoved: 20,
-            unit: "packs",
-            reason: "STOCK_REPLENISHMENT",
-            action: "REMOVED",
-            timestamp: "2025-06-20T14:30:00"
-        },
-        {
-            ref: "SH003",
-            item: {
-                ref: "STK003",
-                category: "MAINTENANCE",
-                name: "LED Bulb",
-                quantity: 50,
-                unit: "pieces",
-                expiryDate: null,
-                createdDateTime: "2025-06-10T14:20:00",
-                lastModifiedDateTime: "2025-06-20T09:45:00"
-            },
-            name: "LED Bulb",
-            department: "MAINTENANCE",
-            quantityMoved: 10,
-            unit: "pieces",
-            reason: "REPAIR_TASK",
-            action: "REMOVED",
-            timestamp: "2025-06-22T08:15:00"
-        },
-        {
-            ref: "SH004",
-            item: {
-                ref: "STK005",
-                category: "RESTAURANT_BAR",
-                name: "Mineral Water",
-                quantity: 200,
-                unit: "bottles",
-                expiryDate: "2025-08-01",
-                createdDateTime: "2025-06-15T07:45:00",
-                lastModifiedDateTime: "2025-06-28T08:10:00"
-            },
-            name: "LED Bulb",
-            department: "RESTAURANT_BAR",
-            quantityMoved: 12,
-            unit: "bottles",
-            reason: "GUEST_REQUEST",
-            action: "REMOVED",
-            timestamp: "2025-06-25T10:00:00"
-        },
-        {
-            ref: "SH005",
-            item: {
-                ref: "STK004",
-                category: "MAINTENANCE",
-                name: "PVC Pipe",
-                quantity: 30,
-                unit: "meters",
-                expiryDate: null,
-                createdDateTime: "2025-06-12T13:00:00",
-                lastModifiedDateTime: "2025-06-25T15:30:00"
-            },
-            name: "PVC Pipe",
-            department: "MAINTENANCE",
-            quantityMoved: 3,
-            unit: "meters",
-            reason: "PIPE_REPLACEMENT",
-            action: "REMOVED",
-            timestamp: "2025-06-27T16:45:00"
-        }
-    ];
-
-
 
     const fetchData = async (page) => {
         // const res = await fetch(`/api/items?page=${page}`);
         // const { data, totalPages } = await res.json();
 
-        console.log(page);
-        setData(dataList);
-        setPageCount(totalPages);
+        setLoading(true);
+        try {
+            const startDateTime = startDate ? `${startDate}T00:00:00` : null;
+            const endDateTime = endDate ? `${endDate}T23:59:59` : null;
+
+            const res = await restClient.post(`/inventory/filterStockHistory?page=${page}&size=${size}&query=${tableSearchTerm}`, {
+                department: selectedCategory || null,
+                reason: selectedReason || null,
+                action: selectedAction || null,
+                startDate: startDateTime,
+                endDate: endDateTime
+            },navigate);
+            console.log(res)
+            if (res?.responseHeader?.responseCode === "00") {
+                setData(res.data);
+                if (res.totalPages !== pageCount) {
+                    setPageCount(res.totalPages);
+                }
+            }
+        } catch (error) {
+            console.log(error);
+        } finally {
+            setLoading(false);
+        }
     };
 
     useEffect(() => {
@@ -161,21 +84,24 @@ const InventoryHistory = () => {
     }, [page]);
 
     const handlePageChange = (newPage) => {
-        if (newPage >= 1 && newPage <= pageCount) {
+        if (newPage >= 0 && newPage <= pageCount) {
             setPage(newPage);
         }
     };
 
     const onSubmit = () => {
-
+        fetchData(page);
     };
 
 
 
     return (
         <div className="flex flex-col" >
-
-            <BackButton/>
+            {loading && <LoadingScreen />}
+            <div className="flex items-center pt-5 ps-5 space-x-2 mb-4 cursor-pointer" onClick={() => navigate('/inventory', { replace: true }) }>
+                <ArrowLeft className="text-gray-700" />
+                <span className="text-sm text-gray-700">Back</span>
+            </div>
 
             <main className="main ps-20 py-6 mt-3 text-2xl w-full">
                 {/*<div className="mb-5">*/}

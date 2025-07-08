@@ -6,19 +6,26 @@ import {menuItems} from "../utils/index.js";
 import CreateButton from "../components/CreateButton.jsx";
 import CreateRoomService from "../Modals/CreateRoomService.jsx";
 import UpdateRoomService from "../Modals/UpdateRoomService.jsx";
+import restClient from "../utils/restClient.js";
+import LoadingScreen from "../components/LoadingScreen.jsx";
+import ConfirmModal from "../components/ConfirmModal.jsx";
+import {useNavigate} from "react-router-dom";
 
 const RoomService = () => {
 
-    const [page, setPage] = useState(1);
+    const [page, setPage] = useState(0);
     const [data, setData] = useState([]);
     const [pageCount, setPageCount] = useState(1);
 
     const [showCreateModal, setShowCreateModal] = useState(false);
     const [showUpdateModal, setShowUpdateModal] = useState(false);
     const [service, setService] = useState({});
+    const [loading, setLoading] = useState(false);
+    const [showModal, setShowModal] = useState(false);
+    const [modalMessage, setModalMessage] = useState(false);
+    const navigate = useNavigate();
 
 
-    const totalPages = 20;
 
     const columns = [
         { label: "Service", accessor: "service" },
@@ -29,49 +36,39 @@ const RoomService = () => {
         )},
     ];
 
-    const dataList = [
-        {
-            ref: "SRV001",
-            service: "Room Cleaning",
-            price: 3000.0
-        },
-        {
-            ref: "SRV002",
-            service: "Laundry Service",
-            price: 2000.0
-        },
-        {
-            ref: "SRV003",
-            service: "Airport Pickup",
-            price: 5000.0
-        },
-        {
-            ref: "SRV004",
-            service: "Breakfast Buffet",
-            price: 2500.0
-        },
-        {
-            ref: "SRV005",
-            service: "Spa Session",
-            price: 7000.0
-        }
-    ];
 
-    const fetchData = async (page) => {
+    const fetchData = async () => {
         // const res = await fetch(`/api/items?page=${page}`);
         // const { data, totalPages } = await res.json();
 
-        console.log(page);
-        setData(dataList);
-        setPageCount(totalPages);
+        setLoading(true);
+        try {
+            const res = await restClient.get('/room/service/filter?query=', navigate);
+            console.log("Room Service",res)
+            // console.log(res)
+            if (res?.responseHeader?.responseCode === "00") {
+                setData(res.data);
+                setPageCount(1);
+            }
+            else{
+                setModalMessage("Something went wrong");
+                setShowModal(true);
+            }
+        } catch (error) {
+            console.log(error);
+            setModalMessage("Something went wrong");
+            setShowModal(true);
+        } finally {
+            setLoading(false);
+        }
     };
 
     useEffect(() => {
-        fetchData(page);
-    }, [page]);
+        fetchData();
+    }, []);
 
     const handlePageChange = (newPage) => {
-        if (newPage >= 1 && newPage <= pageCount) {
+        if (newPage >= 0 && newPage <= pageCount) {
             setPage(newPage);
         }
     };
@@ -82,9 +79,14 @@ const RoomService = () => {
         setShowUpdateModal(true);
     }
 
+    const onSubmit = () =>{
+        fetchData();
+    }
+
 
     return (
         <div className="flex" >
+            {loading && <LoadingScreen />}
             <Sidebar menuItems={menuItems}/>
 
             <main className="main ps-20 py-6 mt-3 text-2xl w-full">
@@ -97,6 +99,7 @@ const RoomService = () => {
                     {showCreateModal && (
                         <CreateRoomService
                             onClose={() => setShowCreateModal(false)}
+                            onSubmit={onSubmit}
                         />
                     )}
                 </div>
@@ -116,6 +119,14 @@ const RoomService = () => {
                 <UpdateRoomService
                     service={service}
                     onClose={() => setShowUpdateModal(false)}
+                    onSubmit={onSubmit}
+                />
+            )}
+
+            {showModal && (
+                <ConfirmModal
+                    message={modalMessage}
+                    onCancel={() => setShowModal(false)}
                 />
             )}
 

@@ -130,7 +130,7 @@ const HallReservation = () => {
     }, [page]);
 
     const handlePageChange = (newPage) => {
-        if (newPage >= 1 && newPage <= pageCount) {
+        if (newPage >= 0 && newPage <= pageCount) {
             setPage(newPage);
         }
     };

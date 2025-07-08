@@ -6,7 +6,7 @@ function getToken() {
 
 function handleExpiredToken(navigate) {
     localStorage.removeItem('token');
-    navigate('/'); // Or use React Router navigate
+    navigate('/', { replace: true }); // Or use React Router navigate
 }
 
 async function request(endpoint, method = 'GET', data = null, includeToken = true,navigate) {

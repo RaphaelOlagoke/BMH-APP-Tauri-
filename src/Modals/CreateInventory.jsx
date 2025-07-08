@@ -1,7 +1,10 @@
 import React, { useState } from 'react';
 import ConfirmModal from "../components/ConfirmModal.jsx";
+import restClient from "../utils/restClient.js";
+import LoadingScreen from "../components/LoadingScreen.jsx";
+import {useNavigate} from "react-router-dom";
 
-const CreateInventory = ({ onClose, categories = [] }) => {
+const CreateInventory = ({ onClose, onSubmit,categories = [] }) => {
     const [name, setName] = useState('');
     const [quantity, setQuantity] = useState('');
     const [unit, setUnit] = useState('');
@@ -10,13 +13,18 @@ const CreateInventory = ({ onClose, categories = [] }) => {
 
     const [showConfirm, setShowConfirm] = useState(false);
     const [showMissingFields, setShowMissingFields] = useState(false);
+    const [loading, setLoading] = useState(false);
+    const [showSuccessModal, setShowSuccessModal] = useState(false);
+    const navigate = useNavigate();
+    const [modalMessage, setModalMessage] = useState("");
 
-    const onSubmit = () => {
-
-    }
+    // const onSubmit = () => {
+    //
+    // }
 
     const handleSubmit = () => {
         if (!name || !quantity || !unit || !category) {
+            setModalMessage("Required fields cannot be empty")
             setShowMissingFields(true);
         }
         else{
@@ -26,20 +34,49 @@ const CreateInventory = ({ onClose, categories = [] }) => {
 
     };
 
-    const confirmSubmission = () => {
-        console.log(`Creating Inventory  ${name}`);
-        onSubmit({
-            name,
-            quantity: parseFloat(quantity),
-            unit,
-            category,
-            expirationDate
-        });
+    const confirmSubmission = async () => {
+        // console.log(`Creating Inventory  ${name}`);
         setShowConfirm(false);
+        setLoading(true);
+        try {
+            const request = {
+                category : category,
+                name : name,
+                quantity : quantity,
+                unit : unit,
+                expiryDate :expirationDate || null
+
+            }
+            const res = await restClient.post('/inventory/stockItem/', request, navigate);
+            // console.log("Add Room",res)
+            if(res.responseHeader.responseCode === "00") {
+                setModalMessage("Item Created");
+                setShowSuccessModal(true);
+            }
+            else{
+                setModalMessage(res.error ?? "Something went wrong!");
+                setShowMissingFields(true);
+            }
+        }
+            // eslint-disable-next-line no-unused-vars
+        catch (error) {
+            setModalMessage("Something went wrong!");
+            setShowMissingFields(true);
+        }
+        finally {
+            setLoading(false);
+        }
     };
+
+    const onSuccess = () => {
+        setShowSuccessModal(false)
+        onClose();
+        onSubmit();
+    }
 
     return (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50 text-start text-[15px]">
+            {loading && <LoadingScreen />}
             <div className="bg-white rounded-lg shadow-lg p-6 w-full max-w-lg">
                 <div className="flex justify-between items-center mb-4">
                     <h2 className="text-lg font-semibold">Create Inventory</h2>
@@ -128,8 +165,15 @@ const CreateInventory = ({ onClose, categories = [] }) => {
             {/* ✅ Missing Fields Modal */}
             {showMissingFields && (
                 <ConfirmModal
-                    message="Required fields cannot be empty"
+                    message={modalMessage}
                     onCancel={() => setShowMissingFields(false)}
+                />
+            )}
+
+            {showSuccessModal && (
+                <ConfirmModal
+                    message={modalMessage}
+                    onCancel={() => onSuccess()}
                 />
             )}
         </div>
