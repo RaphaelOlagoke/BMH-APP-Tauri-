@@ -1,9 +1,12 @@
 import React from 'react'
 import DateFilter from "./DateFilter.jsx"
+import Searchbar from "./Searchbar.jsx";
 
 
 const RestaurantOrdersFilter = ({
                                    headerText,
+                                    value,
+                                    onChange,
                                    startDate,
                                    endDate,
                                    setStartDate,
@@ -15,8 +18,14 @@ const RestaurantOrdersFilter = ({
                                }) => {
     return (
         <form onSubmit={onSubmit}>
-            <div className="flex justify-between items-center">
+            <div className="flex justify-between mb-5">
                 <h2 className="text-2xl">{headerText}</h2>
+                <div>
+                    <Searchbar  placeholder= 'Search...' value={value} onChange={onChange} onSubmit={onSubmit} bgClass="border" />
+                </div>
+
+            </div>
+            <div className="flex justify-end items-center">
                 <div className="flex items-center space-x-5 justify-end">
 
                     {/* Status Dropdown */}

@@ -39,7 +39,7 @@ const Login = () => {
                     const data = res.data
                     localStorage.setItem('token', data.token);
                     localStorage.setItem('user', JSON.stringify(data.user));
-                    const department = data.department;
+                    const department = data.user.department;
 
                     switch (department) {
                         case 'RESTAURANT_BAR':

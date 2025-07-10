@@ -15,7 +15,7 @@ import {
     CalendarDays,
     ClipboardList,
     FileText,
-    Percent,
+    Percent, RotateCcw,
     Settings,
     Sparkles,
     Users,
@@ -48,7 +48,7 @@ export const menuItems = [
     { label: 'Restaurant & Bar', icon: Utensils, path: '/restaurant-bar', roles: ["SUPER_ADMIN","ADMIN", "MANAGER", "ACCOUNTS"] },
     { label: 'House Keeping', icon: Sparkles, path: '/house-keeping', roles: ["SUPER_ADMIN","ADMIN", "MANAGER", "ACCOUNTS"] },
     { label: 'Invoice', icon: FileText, path: '/invoice', roles: ["SUPER_ADMIN","ADMIN", "MANAGER", "ACCOUNTS"] },
-    // { label: 'Refund', icon: RotateCcw, path: '/refund' },
+    { label: 'Refund', icon: RotateCcw, path: '/refund', roles: ["SUPER_ADMIN"]},
     { label: 'Discount', icon: Percent, path: '/discount' , roles: ["SUPER_ADMIN"]},
     { label: 'Settings', icon: Settings, path: '/settings', roles: ["SUPER_ADMIN"] },
     { label: 'Users', icon: Users, path: '/users', roles: ["SUPER_ADMIN"] },
@@ -65,8 +65,19 @@ export const PAYMENT_STATUS = ["PAID", "UNPAID", "DEBIT", "REFUNDED"];
 export const ROOM_TYPES = ["EXECUTIVE_SUITE", "BUSINESS_SUITE_A", "BUSINESS_SUITE_B", "EXECUTIVE_DELUXE", "DELUXE", "CLASSIC"];
 export const ROOM_STATUS = ["AVAILABLE", "OCCUPIED"];
 
-export const USER = JSON.parse(localStorage.getItem('user'));
-export const USER_NAME = USER ? USER.username : null;
+// export const USER = JSON.parse(localStorage.getItem('user'));
+// export const USER_NAME = USER ? USER.username : null;
+
+export const getUser = () => {
+    const user = localStorage.getItem('user');
+    return user ? JSON.parse(user) : null;
+};
+
+export const getUsername = () => {
+    const user = getUser();
+    return user?.username || null;
+};
+
 
 export const loadRoomsData = async (setLoading, setRoomOptions, navigate, endpoint = '/room/all') => {
     setLoading(true);

@@ -22,7 +22,7 @@ const RoomService = () => {
     const [service, setService] = useState({});
     const [loading, setLoading] = useState(false);
     const [showModal, setShowModal] = useState(false);
-    const [modalMessage, setModalMessage] = useState(false);
+    const [modalMessage, setModalMessage] = useState("");
     const navigate = useNavigate();
 
 

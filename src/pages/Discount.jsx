@@ -8,11 +8,15 @@ import CreateReservation from "../Modals/CreateReservation.jsx";
 import DiscountFilter from "../components/DiscountFilter.jsx";
 import CreateDiscount from "../Modals/CreateDiscount.jsx";
 import UpdateDiscount from "../Modals/UpdateDiscount.jsx";
+import restClient from "../utils/restClient.js";
+import LoadingScreen from "../components/LoadingScreen.jsx";
+import ConfirmModal from "../components/ConfirmModal.jsx";
+import {useNavigate} from "react-router-dom";
 
 const Discount = () => {
     const [startDate, setStartDate] = useState('');
     const [endDate, setEndDate] = useState('');
-    const [page, setPage] = useState(1);
+    const [page, setPage] = useState(0);
     const [data, setData] = useState([]);
     const [pageCount, setPageCount] = useState(1);
 
@@ -22,6 +26,10 @@ const Discount = () => {
 
     const [isActive, setIsActive] = useState('');
     const [isOneTimeUse, setIsOneTimeUse] = useState('');
+    const [showModal, setShowModal] = useState(false);
+    const [loading, setLoading] = useState(false);
+    const [modalMessage, setModalMessage] = useState("");
+    const navigate = useNavigate();
 
     const booleanOptions = ["YES", "NO"];
 
@@ -35,7 +43,7 @@ const Discount = () => {
         false: "bg-red-200 text-red-700",
     };
 
-    const totalPages = 20;
+    const size = 20;
 
     const columns = [
         { label: "Discount Code", accessor: "code" },
@@ -54,57 +62,43 @@ const Discount = () => {
             )},
     ];
 
-    const dataList = [
-        {
-            code: "DISC10",
-            percentage: 10,
-            startDate: "2025-07-01T00:00:00",
-            endDate: "2025-07-31T23:59:00",
-            active: true,
-            oneTimeUse: false
-        },
-        {
-            code: "WELCOME25",
-            percentage: 25,
-            startDate: "2025-01-01T00:00:00",
-            endDate: "2025-12-31T23:59:00",
-            active: true,
-            oneTimeUse: true
-        },
-        {
-            code: "SUMMER15",
-            percentage: 15,
-            startDate: "2025-06-15T00:00:00",
-            endDate: "2025-08-15T23:59:00",
-            active: true,
-            oneTimeUse: false
-        },
-        {
-            code: "EXPIRED50",
-            percentage: 50,
-            startDate: "2025-03-01T00:00:00",
-            endDate: "2025-05-31T23:59:00",
-            active: false,
-            oneTimeUse: true
-        },
-        {
-            code: "FLASH5",
-            percentage: 5,
-            startDate: "2025-07-04T12:00:00",
-            endDate: "2025-07-04T18:00:00",
-            active: true,
-            oneTimeUse: true
-        }
-    ];
-
 
     const fetchData = async (page) => {
         // const res = await fetch(`/api/items?page=${page}`);
         // const { data, totalPages } = await res.json();
 
-        console.log(page);
-        setData(dataList);
-        setPageCount(totalPages);
+        setLoading(true);
+        try {
+            const startDateTime = startDate ? `${startDate}T00:00:00` : null;
+            const endDateTime = endDate ? `${endDate}T23:59:59` : null;
+
+
+            const request = {
+                active: isActive === "YES" ? true : isActive === "NO" ? false : null,
+                oneTimeUse: isOneTimeUse === "YES" ? true : isOneTimeUse === "NO" ? false : null,
+                startDate: startDateTime,
+                endDate: endDateTime,
+            };
+            // console.log(request);
+            const res = await restClient.post(`/discount/filter?page=${page}&size=${size}`, request,navigate);
+            // console.log(res)
+            if (res?.responseHeader?.responseCode === "00") {
+                setData(res.data);
+                if (res.totalPages !== pageCount) {
+                    setPageCount(res.totalPages);
+                }
+            }
+            else{
+                setModalMessage(res.error ?? "Something went wrong!");
+                setShowModal(true);
+            }
+        } catch (error) {
+            console.log(error);
+            setModalMessage("Something went wrong!");
+            setShowModal(true);
+        } finally {
+            setLoading(false);
+        }
     };
 
     useEffect(() => {
@@ -112,18 +106,24 @@ const Discount = () => {
     }, [page]);
 
     const handlePageChange = (newPage) => {
-        if (newPage >= 1 && newPage <= pageCount) {
+        if (newPage >= 0 && newPage <= pageCount) {
             setPage(newPage);
         }
     };
 
     const onSubmit = () => {
-
+        setPage(0);
+        fetchData(page)
     };
 
+    const handleClose = () => {
+        setShowUpdateModal(false)
+        onSubmit();
+    }
 
     return (
         <div className="flex" >
+            {loading && <LoadingScreen />}
             <Sidebar menuItems={menuItems}/>
 
             <main className="main ps-20 py-6 mt-3 text-2xl w-full">
@@ -136,6 +136,7 @@ const Discount = () => {
                     {showCreateModal && (
                         <CreateDiscount
                             onClose={() => setShowCreateModal(false)}
+                            onSubmit={onSubmit}
                         />
                     )}
                 </div>
@@ -168,7 +169,15 @@ const Discount = () => {
             {showUpdateModal && (
                 <UpdateDiscount
                     discount={discount}
-                    onClose={() => setShowUpdateModal(false)}
+                    onClose={handleClose}
+                    onSubmit={onSubmit}
+                />
+            )}
+
+            {showModal && (
+                <ConfirmModal
+                    message={modalMessage}
+                    onCancel={() => setShowModal(false)}
                 />
             )}
         </div>

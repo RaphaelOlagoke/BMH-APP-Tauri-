@@ -27,7 +27,7 @@ const InvoiceFilter = ({
             <div className="flex justify-between mb-5">
                 <h2 className="text-2xl">{headerText}</h2>
                 <div>
-                    <Searchbar  placeholder= 'Search...' value={value} onChange={onChange} bgClass="border" />
+                    <Searchbar  placeholder= 'Search...' value={value} onChange={onChange} onSubmit={onSubmit} bgClass="border" />
                 </div>
 
             </div>

@@ -19,7 +19,7 @@ import {
 import Header from "../components/Header.jsx";
 import InfoMenu from "../components/InfoMenu.jsx";
 import {
-    availableRoomsImg, loadRoomsData,
+    availableRoomsImg, getUser, loadRoomsData,
     maintenanceRoomsImg,
     menuItems,
     needsCleaningRoomsImg,
@@ -30,6 +30,7 @@ import GuestLogsFilterForm from "../components/GuestLogsFilterForm.jsx";
 import {Link, useNavigate} from "react-router-dom";
 import restClient from "../utils/restClient.js";
 import LoadingScreen from "../components/LoadingScreen.jsx";
+import ConfirmModal from "../components/ConfirmModal.jsx";
 
 // const roomsList = [
 //     { label: 'Available rooms', image: availableRoomsImg, count: "44" , value: ""},
@@ -93,6 +94,8 @@ const Index = () => {
     const [loading, setLoading] = useState(false);
     const [roomsList, setRoomsList] = useState([]);
     const [roomOptions, setRoomOptions] = useState([]);
+    const [showModal, setShowModal] = useState(false);
+    const [modalMessage, setModalMessage] = useState("");
 
 
     const paymentStatusOptions = ["UNPAID", "PAID", "DEBIT", "REFUNDED"];
@@ -150,8 +153,14 @@ const Index = () => {
                     setPageCount(res.totalPages);
                 }
             }
+            else{
+                setModalMessage(res.error ?? "Something went wrong!");
+                setShowModal(true);
+            }
         } catch (error) {
             console.log(error);
+            setModalMessage( "Something went wrong!");
+            setShowModal(true);
         } finally {
             setLoading(false);
         }
@@ -173,10 +182,11 @@ const Index = () => {
         }
     };
 
-    const onSubmit = () => {
+    const onSubmit = async () => {
         console.log("Submitting");
         setPage(0);
-        fetchData(page)
+        await loadRoomSummaryData();
+        await fetchData(page)
     };
 
     // const navigate = useNavigate();
@@ -209,6 +219,7 @@ const Index = () => {
             <main className="main ps-20 py-6 text-2xl w-full">
                 <Header headerText="Hello Evano 👋🏼," value={searchTerm}  onChange={setSearchTerm} />
                 <InfoMenu menuItems={roomsList}/>
+                {getUser().department === "SUPER_ADMIN" || getUser().department === "RECEPTIONIST" && (
                 <div className="flex justify-end space-x-5 py-3 me-5">
                     <Link
                         to="/check-in"
@@ -226,6 +237,8 @@ const Index = () => {
                         Check-Out
                     </Link>
                 </div>
+                    )
+                }
 
                 <Table
                     filterForm={
@@ -256,6 +269,13 @@ const Index = () => {
                     showEdit={true}
                 />
             </main>
+
+            {showModal && (
+                <ConfirmModal
+                    message={modalMessage}
+                    onCancel={() => setShowModal(false)}
+                />
+            )}
         </div>
     )
 }

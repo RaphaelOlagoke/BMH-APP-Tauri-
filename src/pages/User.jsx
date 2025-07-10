@@ -7,9 +7,13 @@ import CreateButton from "../components/CreateButton.jsx";
 import UserFilter from "../components/UserFilter.jsx";
 import UpdateUser from "../Modals/UpdateUser.jsx";
 import CreateUser from "../Modals/CreateUser.jsx";
+import restClient from "../utils/restClient.js";
+import LoadingScreen from "../components/LoadingScreen.jsx";
+import ConfirmModal from "../components/ConfirmModal.jsx";
+import {useNavigate} from "react-router-dom";
 
 const User = () => {
-    const [page, setPage] = useState(1);
+    const [page, setPage] = useState(0);
     const [data, setData] = useState([]);
     const [pageCount, setPageCount] = useState(1);
 
@@ -20,6 +24,10 @@ const User = () => {
     const [isActive, setIsActive] = useState('');
     const [userAccess, setUserAccess] = useState('');
     const [userRole, setUserRole] = useState('');
+    const [showModal, setShowModal] = useState(false);
+    const [loading, setLoading] = useState(false);
+    const [modalMessage, setModalMessage] = useState(false);
+    const navigate = useNavigate();
 
     const handleEdit = (item) => {
         setUser(item);
@@ -31,7 +39,7 @@ const User = () => {
         false: "bg-red-200 text-red-700",
     };
 
-    const totalPages = 20;
+    const size = 20;
 
     const userAccessOptions = ["RECEPTIONIST", "RESTAURANT_BAR", "ADMIN", "ACCOUNTS", "MANAGER", "SUPER_ADMIN"];
     const userRoleOptions = ["USER", "ADMIN", "SUPER_ADMIN"];
@@ -52,77 +60,39 @@ const User = () => {
         { label: "Date Modified", accessor: "lastModifiedDateTime" }
     ];
 
-    const dataList = [
-        {
-            email: "admin@example.com",
-            username: "adminUser",
-            password: "AdminPass123!",
-            role: "ADMIN",
-            enabled: true,
-            department: "ACCOUNTS",
-            createdBy: "system",
-            lastModifiedBy: "adminUser",
-            createdDateTime: "2025-06-01T08:00:00",
-            lastModifiedDateTime: "2025-07-01T10:15:00"
-        },
-        {
-            email: "john.doe@example.com",
-            username: "jdoe",
-            password: "JDoe#456",
-            role: "USER",
-            enabled: true,
-            department: "RECEPTIONIST",
-            createdBy: "adminUser",
-            lastModifiedBy: "adminUser",
-            createdDateTime: "2025-06-05T09:30:00",
-            lastModifiedDateTime: "2025-06-20T11:00:00"
-        },
-        {
-            email: "jane.smith@example.com",
-            username: "jsmith",
-            password: "JanePwd789!",
-            role: "USER",
-            enabled: false,
-            department: "RESTAURANT_BAR",
-            createdBy: "adminUser",
-            lastModifiedBy: "jdoe",
-            createdDateTime: "2025-06-10T10:45:00",
-            lastModifiedDateTime: "2025-06-30T12:20:00"
-        },
-        {
-            email: "chef.mario@example.com",
-            username: "chefMario",
-            password: "MarioCooks99",
-            role: "USER",
-            enabled: true,
-            department: "RESTAURANT_BAR",
-            createdBy: "adminUser",
-            lastModifiedBy: "jsmith",
-            createdDateTime: "2025-06-12T14:10:00",
-            lastModifiedDateTime: "2025-07-03T09:00:00"
-        },
-        {
-            email: "manager.lisa@example.com",
-            username: "lisaManager",
-            password: "Manager$123",
-            role: "ADMIN",
-            enabled: true,
-            department: "MANAGER",
-            createdBy: "system",
-            lastModifiedBy: "lisaManager",
-            createdDateTime: "2025-06-01T08:30:00",
-            lastModifiedDateTime: "2025-07-01T08:30:00"
-        }
-    ];
-
 
     const fetchData = async (page) => {
         // const res = await fetch(`/api/items?page=${page}`);
         // const { data, totalPages } = await res.json();
 
-        console.log(page);
-        setData(dataList);
-        setPageCount(totalPages);
+        setLoading(true);
+        try {
+
+            const request = {
+                role: userRole || null,
+                enabled: isActive === "true" ? true : isActive === "false" ? false : null,
+                department: userAccess || null
+            };
+            // console.log(request);
+            const res = await restClient.post(`/admin/filter?page=${page}&size=${size}`, request,navigate);
+            // console.log(res)
+            if (res?.responseHeader?.responseCode === "00") {
+                setData(res.data);
+                if (res.totalPages !== pageCount) {
+                    setPageCount(res.totalPages);
+                }
+            }
+            else{
+                setModalMessage(res.error ?? "Something went wrong!");
+                setShowModal(true);
+            }
+        } catch (error) {
+            console.log(error);
+            setModalMessage("Something went wrong!");
+            setShowModal(true);
+        } finally {
+            setLoading(false);
+        }
     };
 
     useEffect(() => {
@@ -130,18 +100,20 @@ const User = () => {
     }, [page]);
 
     const handlePageChange = (newPage) => {
-        if (newPage >= 1 && newPage <= pageCount) {
+        if (newPage >= 0 && newPage <= pageCount) {
             setPage(newPage);
         }
     };
 
     const onSubmit = () => {
-
+        setPage(0);
+        fetchData(page)
     };
 
 
     return (
         <div className="flex" >
+            {loading && <LoadingScreen />}
             <Sidebar menuItems={menuItems}/>
 
             <main className="main ps-10 py-6 mt-3 text-2xl overflow-x-scroll">
@@ -156,6 +128,7 @@ const User = () => {
                             userAccessOptions ={userAccessOptions}
                             userRoleOptions = { userRoleOptions}
                             onClose={() => setShowCreateModal(false)}
+                            onSubmit={onSubmit}
                         />
                     )}
                 </div>
@@ -190,6 +163,14 @@ const User = () => {
                     userAccessOptions ={userAccessOptions}
                     userRoleOptions = { userRoleOptions}
                     onClose={() => setShowUpdateModal(false)}
+                    onSubmit={onSubmit}
+                />
+            )}
+
+            {showModal && (
+                <ConfirmModal
+                    message={modalMessage}
+                    onCancel={() => setShowModal(false)}
                 />
             )}
         </div>

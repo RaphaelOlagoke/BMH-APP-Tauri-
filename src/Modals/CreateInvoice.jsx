@@ -1,7 +1,10 @@
 import React, { useState } from 'react';
 import ConfirmModal from "../components/ConfirmModal.jsx";
+import {useNavigate} from "react-router-dom";
+import LoadingScreen from "../components/LoadingScreen.jsx";
+import restClient from "../utils/restClient.js";
 
-const CreateInvoice = ({ onClose, paymentMethodOptions, serviceOptions, paymentStatusOptions }) => {
+const CreateInvoice = ({ onClose, onSubmit, paymentMethodOptions, serviceOptions, paymentStatusOptions }) => {
     const [description, setDescription] = useState('');
     const [serviceType, setServiceType] = useState('');
     const [paymentMethod, setPaymentMethod] = useState('');
@@ -14,10 +17,11 @@ const CreateInvoice = ({ onClose, paymentMethodOptions, serviceOptions, paymentS
 
     const [showConfirm, setShowConfirm] = useState(false);
     const [showMissingFields, setShowMissingFields] = useState(false);
+    const [loading, setLoading] = useState(false);
+    const [showSuccessModal, setShowSuccessModal] = useState(false);
+    const navigate = useNavigate();
+    const [modalMessage, setModalMessage] = useState("");
 
-    const onSubmit = () => {
-
-    }
 
     const handleAddItem = () => {
         if (!itemName || !itemQty || !itemPrice) return;
@@ -34,6 +38,7 @@ const CreateInvoice = ({ onClose, paymentMethodOptions, serviceOptions, paymentS
 
     const handleSubmit = () => {
         if (!description || !serviceType || !paymentMethod || !paymentStatus) {
+            setModalMessage("Required Fields cannot be null")
             setShowMissingFields(true);
         }
         else{
@@ -41,22 +46,49 @@ const CreateInvoice = ({ onClose, paymentMethodOptions, serviceOptions, paymentS
         }
     };
 
-    const confirmSubmission = () => {
-        console.log(`Creating Invoice  ${description}`);
-        const payload = {
-            description,
-            serviceType,
-            paymentMethod,
-            paymentStatus,
-            items,
-        };
-
-        onSubmit(payload);
+    const confirmSubmission = async () => {
+        // console.log(`Creating Invoice  ${description}`);
         setShowConfirm(false);
+        setLoading(true);
+        try {
+            const request = {
+                roomNumber: 0,
+                paymentStatus: paymentStatus,
+                paymentMethod: paymentMethod,
+                service: serviceType,
+                serviceDetails: description,
+                items: items
+            }
+            const res = await restClient.post('/invoice/', request, navigate);
+            // console.log("Add Room",res)
+            if(res.responseHeader.responseCode === "00") {
+                setModalMessage("Invoice Created");
+                setShowSuccessModal(true);
+            }
+            else{
+                setModalMessage(res.error ?? "Something went wrong!");
+                setShowMissingFields(true);
+            }
+        }
+            // eslint-disable-next-line no-unused-vars
+        catch (error) {
+            setModalMessage("Something went wrong!");
+            setShowMissingFields(true);
+        }
+        finally {
+            setLoading(false);
+        }
     };
+
+    const onSuccess = () => {
+        setShowSuccessModal(false)
+        onClose();
+        onSubmit();
+    }
 
     return (
         <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center text-start text-[15px]">
+            {loading && <LoadingScreen />}
             <div className="bg-white p-6 rounded-lg shadow-lg w-full max-w-3xl max-h-[90vh] overflow-y-auto">
                 <div className="flex justify-between items-center mb-4">
                     <h2 className="text-lg font-semibold">Create Invoice</h2>
@@ -205,8 +237,15 @@ const CreateInvoice = ({ onClose, paymentMethodOptions, serviceOptions, paymentS
             {/* ✅ Missing Fields Modal */}
             {showMissingFields && (
                 <ConfirmModal
-                    message="Required Fields cannot be null"
+                    message={modalMessage}
                     onCancel={() => setShowMissingFields(false)}
+                />
+            )}
+
+            {showSuccessModal && (
+                <ConfirmModal
+                    message={modalMessage}
+                    onCancel={() => onSuccess()}
                 />
             )}
         </div>

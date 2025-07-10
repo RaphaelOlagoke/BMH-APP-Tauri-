@@ -1,22 +1,47 @@
 import React, { useState } from 'react';
 import ConfirmModal from "../components/ConfirmModal.jsx";
+import restClient from "../utils/restClient.js";
+import LoadingScreen from "../components/LoadingScreen.jsx";
+import {useNavigate} from "react-router-dom";
 
 const UpdateDiscount = ({ discount,onClose }) => {
-    const [discountPercentage, setDiscountPercentage] = useState(discount.percentage || '');
-    const [isActive, setIsActive] = useState(discount.active ? 'true' : 'false');
-    const [oneTimeUse, setOneTimeUse] = useState(discount.oneTimeUse ? 'true' : 'false');
-    const [validFrom, setValidFrom] = useState(discount.startDate || '');
-    const [validTo, setValidTo] = useState(discount.endDate || '');
+    const [discountData, setDiscountData] = useState(discount);
+    const [discountPercentage, setDiscountPercentage] = useState(discountData.percentage || '');
+    const [isActive, setIsActive] = useState(discountData.active ? 'true' : 'false');
+    const [oneTimeUse, setOneTimeUse] = useState(discountData.oneTimeUse ? 'true' : 'false');
+    const [validFrom, setValidFrom] = useState(discountData.startDate || '');
+    const [validTo, setValidTo] = useState(discountData.endDate || '');
 
     const [showConfirm, setShowConfirm] = useState(false);
     const [showMissingFields, setShowMissingFields] = useState(false);
+    const [loading, setLoading] = useState(false);
+    const [showSuccessModal, setShowSuccessModal] = useState(false);
+    const navigate = useNavigate();
+    const [modalMessage, setModalMessage] = useState("");
 
-    const onUpdate = () => {
 
+    const loadDiscountData = async () => {
+        try {
+            const res = await restClient.get(`/discount/code?code=${discount.code}`, navigate);
+            // console.log("Add Room",res)
+            if(res.responseHeader.responseCode === "00") {
+                setDiscountData(res.data);
+            }
+            else{
+                setModalMessage(res.error ?? "Something went wrong!");
+                setShowMissingFields(true);
+            }
+        }
+            // eslint-disable-next-line no-unused-vars
+        catch (error) {
+            setModalMessage("Something went wrong!");
+            setShowMissingFields(true);
+        }
     }
 
     const handleUpdate = () => {
         if (!discountPercentage || !isActive || !oneTimeUse || !validFrom || !validTo) {
+            setModalMessage("Required Fields cannot be null")
             setShowMissingFields(true);
         }
         else{
@@ -24,22 +49,51 @@ const UpdateDiscount = ({ discount,onClose }) => {
         }
     };
 
-    const confirmSubmission = () => {
-        console.log(`Updating Discount  ${discountPercentage}`);
-        const payload = {
-            ...discount,
-            discountPercentage: parseFloat(discountPercentage),
-            isActive: isActive === 'true',
-            oneTimeUse: oneTimeUse === 'true',
-            validFrom,
-            validTo,
-        };
-        onUpdate(payload);
+    const confirmSubmission = async () => {
+        // console.log(`Updating Discount  ${discountPercentage}`);
         setShowConfirm(false);
+        setLoading(true);
+        try {
+            const request = {
+                code: discount.code,
+                percentage: discountPercentage,
+                startDate: validFrom,
+                endDate: validTo,
+                active: isActive === 'true',
+                oneTimeUse: oneTimeUse === 'true'
+            }
+            const res = await restClient.post('/discount/update', request, navigate);
+            // console.log("Add Room",res)
+            if(res.responseHeader.responseCode === "00") {
+                await loadDiscountData()
+                setModalMessage("Discount Updated");
+                setShowSuccessModal(true);
+            }
+            else{
+                setModalMessage(res.error ?? "Something went wrong!");
+                setShowMissingFields(true);
+            }
+        }
+            // eslint-disable-next-line no-unused-vars
+        catch (error) {
+            setModalMessage("Something went wrong!");
+            setShowMissingFields(true);
+        }
+        finally {
+            setLoading(false);
+        }
     };
+
+    const onSuccess = () => {
+        setShowSuccessModal(false)
+        // onClose();
+        // onSubmit();
+    }
+
 
     return (
         <div className="fixed inset-0 bg-black bg-opacity-40 z-50 flex justify-center items-center text-start text-[15px]">
+            {loading && <LoadingScreen />}
             <div className="bg-white p-6 rounded-lg shadow-lg w-full max-w-md">
                 <div className="flex justify-between items-center mb-4">
                     <h2 className="text-xl font-semibold">Update Discount</h2>
@@ -49,7 +103,7 @@ const UpdateDiscount = ({ discount,onClose }) => {
                 <div className="space-y-4">
                     <input
                         type="text"
-                        value={discount.code}
+                        value={discountData.code}
                         disabled
                         className="w-full px-4 py-2 border rounded bg-gray-100 text-gray-600"
                         placeholder="Discount Code"
@@ -117,7 +171,7 @@ const UpdateDiscount = ({ discount,onClose }) => {
 
             {showConfirm && (
                 <ConfirmModal
-                    message="Create Discount?"
+                    message="Update Discount?"
                     onConfirm={confirmSubmission}
                     onCancel={() => setShowConfirm(false)}
                 />
@@ -127,8 +181,14 @@ const UpdateDiscount = ({ discount,onClose }) => {
             {/* ✅ Missing Fields Modal */}
             {showMissingFields && (
                 <ConfirmModal
-                    message="Required Fields cannot be null"
+                    message={modalMessage}
                     onCancel={() => setShowMissingFields(false)}
+                />
+            )}
+            {showSuccessModal && (
+                <ConfirmModal
+                    message={modalMessage}
+                    onCancel={() => onSuccess()}
                 />
             )}
         </div>

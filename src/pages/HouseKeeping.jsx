@@ -2,11 +2,15 @@ import React, {useEffect, useState} from 'react'
 import Sidebar from "../components/Sidebar.jsx";
 import Header from "../components/Header.jsx";
 import Table from "../components/Table.jsx";
-import {menuItems} from "../utils/index.js";
+import {loadRoomsData, menuItems} from "../utils/index.js";
 import CreateButton from "../components/CreateButton.jsx";
 import HouseKeepingFilter from "../components/HouseKeepingFilter.jsx";
 import CreateHouseKeeping from "../Modals/CreateHouseKeeping.jsx";
 import UpdateHouseKeeping from "../Modals/UpdateHouseKeeping.jsx";
+import LoadingScreen from "../components/LoadingScreen.jsx";
+import restClient from "../utils/restClient.js";
+import {useNavigate} from "react-router-dom";
+import ConfirmModal from "../components/ConfirmModal.jsx";
 
 const HouseKeeping = () => {
 
@@ -16,22 +20,27 @@ const HouseKeeping = () => {
     const [startDate, setStartDate] = useState('');
     const [endDate, setEndDate] = useState('');
 
-    const [page, setPage] = useState(1);
+    const [page, setPage] = useState(0);
     const [data, setData] = useState([]);
     const [pageCount, setPageCount] = useState(1);
 
     const [showCreateModal, setShowCreateModal] = useState(false);
     const [showUpdateModal, setShowUpdateModal] = useState(false);
     const [item, setItem] = useState({});
+    const [loading, setLoading] = useState(false);
+    const [roomOptions, setRoomOptions] = useState([]);
+    const navigate = useNavigate();
+    const [showModal, setShowModal] = useState(false);
+    const [modalMessage, setModalMessage] = useState("");
 
 
-    const roomOptions = ["101", "102", "103", "104", "105", "106", "107", "108", "109"];
+    // const roomOptions = ["101", "102", "103", "104", "105", "106", "107", "108", "109"];
 
     const statusOptions = ["IN_PROGRESS", "COMPLETED", "CANCELED"];
 
-    const roomsNeedsCleaningOptions = ["101", "102"];
+    const [roomsNeedsCleaningOptions, setRoomsNeedsCleaningOptions] = useState([]);
 
-    const totalPages = 20;
+    const size = 20;
 
     const statusStyles = {
         COMPLETED: "bg-green-100 text-green-800",
@@ -40,7 +49,7 @@ const HouseKeeping = () => {
     };
 
     const columns = [
-        { label: "Room Number", accessor: "roomNumber" },
+        { label: "Room Number", accessor: "room", render: (value) => (value.roomNumber) },
         { label: "Status", accessor: "status", render: (value) => (
                 <span className={`px-2 py-1 text-xs font-medium rounded-full ${statusStyles[value]} `}>
                 {value.charAt(0).toUpperCase() + value.slice(1)}
@@ -50,77 +59,85 @@ const HouseKeeping = () => {
         { label: "Completed On", accessor: "completedOn"},
     ];
 
-    const dataList = [
-        {
-            ref: "CLN001",
-            room: { roomNumber: "101", floor: 1 },
-            roomNumber: "101",
-            status: "IN_PROGRESS", // CleaningStatus enum
-            assignedOn: "2025-07-01T09:00:00",
-            completedOn: null,
-            cleaningType: "DAILY" // CleaningType enum
-        },
-        {
-            ref: "CLN002",
-            room: { roomNumber: "102", floor: 1 },
-            status: "COMPLETED",
-            roomNumber: "102",
-            assignedOn: "2025-07-01T08:00:00",
-            completedOn: "2025-07-01T09:30:00",
-            cleaningType: "CHECKOUT"
-        },
-        {
-            ref: "CLN003",
-            room: { roomNumber: "203", floor: 2 },
-            status: "IN_PROGRESS",
-            roomNumber: "203",
-            assignedOn: "2025-07-05T10:15:00",
-            completedOn: null,
-            cleaningType: "DEEP"
-        },
-        {
-            ref: "CLN004",
-            room: { roomNumber: "204", floor: 2 },
-            status: "IN_PROGRESS",
-            roomNumber: "204",
-            assignedOn: "2025-07-05T11:00:00",
-            completedOn: null,
-            cleaningType: "DAILY"
-        },
-        {
-            ref: "CLN005",
-            room: { roomNumber: "305", floor: 3 },
-            roomNumber: "305",
-            status: "COMPLETED",
-            assignedOn: "2025-07-03T07:30:00",
-            completedOn: "2025-07-03T08:45:00",
-            cleaningType: "CHECKOUT"
-        }
-    ];
-
-
 
     const fetchData = async (page) => {
         // const res = await fetch(`/api/items?page=${page}`);
         // const { data, totalPages } = await res.json();
 
-        console.log(page);
-        setData(dataList);
-        setPageCount(totalPages);
+        setLoading(true);
+        try {
+            const startDateTime = startDate ? `${startDate}T00:00:00` : null;
+            const endDateTime = endDate ? `${endDate}T23:59:59` : null;
+
+            const res = await restClient.post(`/cleaningLog/filter?page=${page}&size=${size}`, {
+                status: selectedStatus || null,
+                assignedOn: startDateTime,
+                completedOn: endDateTime,
+                cleaningType : null,
+                roomNumber:  selectedRoom || 0,
+            },navigate);
+            // console.log(res)
+            if (res?.responseHeader?.responseCode === "00") {
+                setData(res.data);
+                if (res.totalPages !== pageCount) {
+                    setPageCount(res.totalPages);
+                }
+            }
+            else{
+                setModalMessage(res.error ?? "Something went wrong!");
+                setShowModal(true);
+            }
+        } catch (error) {
+            console.log(error);
+            setModalMessage("Something went wrong!");
+            setShowModal(true);
+        } finally {
+            setLoading(false);
+        }
     };
+
+    const loadRoomsNeedsCleaning = async  () => {
+        setLoading(true);
+        try {
+            const res = await restClient.get("/room/needsCleaning",navigate);
+            // console.log(res)
+            if(res.data && res.responseHeader.responseCode === "00") {
+                const data = res.data
+                setRoomsNeedsCleaningOptions(data.map(room => room.roomNumber));
+            }
+            else{
+                setModalMessage(res.error ?? "Something went wrong!");
+                setShowModal(true);
+            }
+        }
+        catch (error) {
+            console.log(error);
+            setModalMessage("Something went wrong!");
+            setShowModal(true);
+        }
+        finally {
+            setLoading(false);
+        }
+    }
 
     useEffect(() => {
         fetchData(page);
     }, [page]);
 
+    useEffect(() => {
+        loadRoomsNeedsCleaning();
+        loadRoomsData(setLoading, setRoomOptions, roomOptions,"/room/");
+    },[])
+
     const handlePageChange = (newPage) => {
-        if (newPage >= 1 && newPage <= pageCount) {
+        if (newPage >= 0 && newPage <= pageCount) {
             setPage(newPage);
         }
     };
 
     const onSubmit = () => {
-
+        setPage(0);
+        fetchData(page)
     };
 
     const handleEdit = (item) => {
@@ -131,6 +148,7 @@ const HouseKeeping = () => {
 
     return (
         <div className="flex" >
+            {loading && <LoadingScreen />}
             <Sidebar menuItems={menuItems}/>
 
             <main className="main ps-20 py-6 mt-3 text-2xl w-full">
@@ -144,6 +162,7 @@ const HouseKeeping = () => {
                         <CreateHouseKeeping
                             rooms={roomOptions}
                             onClose={() => setShowCreateModal(false)}
+                            onSubmit={onSubmit}
                         />
                     )}
                 </div>
@@ -182,8 +201,18 @@ const HouseKeeping = () => {
                     item={item}
                     statusList={statusOptions}
                     onClose={() => setShowUpdateModal(false)}
+                    onSubmit={onSubmit}
                 />
             )}
+
+            {/* ✅ Missing Fields Modal */}
+            {showModal && (
+                <ConfirmModal
+                    message={modalMessage}
+                    onCancel={() => setShowModal(false)}
+                />
+            )}
+
         </div>
     )
 }

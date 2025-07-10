@@ -5,7 +5,7 @@ import BackButton from "../components/BackButton.jsx";
 import ConfirmModal from "../components/ConfirmModal.jsx";
 import AddRoom from "../Modals/AddRoom.jsx";
 import UpdateRoom from "../Modals/UpdateRoom.jsx";
-import {ROOM_TYPES, USER} from "../utils/index.js";
+import {getUser, ROOM_TYPES} from "../utils/index.js";
 import restClient from "../utils/restClient.js";
 import LoadingScreen from "../components/LoadingScreen.jsx";
 
@@ -130,7 +130,7 @@ const SingleRoom = () => {
           >
             {room.roomStatus}
           </span>
-                {USER.department === "SUPER_ADMIN" && (
+                {getUser().department === "SUPER_ADMIN" && (
                     <div className="flex items-center gap-3">
                         <button
                             onClick={() => onUpdateRoomStatus(room.id)}

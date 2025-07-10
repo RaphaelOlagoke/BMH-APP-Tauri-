@@ -1,22 +1,28 @@
 import React, { useState } from 'react';
 import ConfirmModal from "../components/ConfirmModal.jsx";
+import restClient from "../utils/restClient.js";
+import LoadingScreen from "../components/LoadingScreen.jsx";
+import {useNavigate} from "react-router-dom";
 
 const UpdateHousekeeping = ({
-                                     item,
-                                     statusList = [],
-                                     onClose,
-                                 }) => {
+    item,
+    statusList = [],
+    onClose,
+    onSubmit,
+}) => {
     const [status, setStatus] = useState(item.status);
 
-    const onSubmit = () => {
-
-    }
 
     const [showConfirm, setShowConfirm] = useState(false);
     const [showMissingFields, setShowMissingFields] = useState(false);
+    const [loading, setLoading] = useState(false);
+    const [showSuccessModal, setShowSuccessModal] = useState(false);
+    const navigate = useNavigate();
+    const [modalMessage, setModalMessage] = useState("");
 
     const handleSubmit = () => {
         if (!status) {
+            setModalMessage("No Status selected")
             setShowMissingFields(true);
         }
         else{
@@ -24,14 +30,46 @@ const UpdateHousekeeping = ({
         }
     };
 
-    const confirmSubmission = () => {
-        console.log(`Updating HouseKeeping  ${status}`);
-        onSubmit( item.room.roomNumber, status );
+    const confirmSubmission = async () => {
+        // console.log(`Updating HouseKeeping  ${status}`);
         setShowConfirm(false);
+        setLoading(true);
+        try {
+            const request = {
+                ref: item.ref,
+                status : status
+
+            }
+            const res = await restClient.post('/cleaningLog/update', request, navigate);
+            // console.log("Add Room",res)
+            if(res.responseHeader.responseCode === "00") {
+                setModalMessage("Item Updated");
+                setShowSuccessModal(true);
+            }
+            else{
+                setModalMessage(res.error ?? "Something went wrong!");
+                setShowMissingFields(true);
+            }
+        }
+            // eslint-disable-next-line no-unused-vars
+        catch (error) {
+            setModalMessage("Something went wrong!");
+            setShowMissingFields(true);
+        }
+        finally {
+            setLoading(false);
+        }
     };
+
+    const onSuccess = () => {
+        setShowSuccessModal(false)
+        onClose();
+        onSubmit();
+    }
 
     return (
         <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center text-start text-[15px]">
+            {loading && <LoadingScreen />}
             <div className="bg-white p-6 rounded-lg shadow-lg w-full max-w-md">
                 <div className="flex justify-between items-center mb-4">
                     <h2 className="text-lg font-semibold">Update Housekeeping</h2>
@@ -83,8 +121,15 @@ const UpdateHousekeeping = ({
             {/* ✅ Missing Fields Modal */}
             {showMissingFields && (
                 <ConfirmModal
-                    message="No Status selected"
+                    message={modalMessage}
                     onCancel={() => setShowMissingFields(false)}
+                />
+            )}
+
+            {showSuccessModal && (
+                <ConfirmModal
+                    message={modalMessage}
+                    onCancel={() => onSuccess()}
                 />
             )}
         </div>

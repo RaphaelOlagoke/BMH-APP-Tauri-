@@ -41,6 +41,9 @@ const CheckInForm = () => {
     const [showSuccessModal, setShowSuccessModal] = useState(false);
     const [roomPriceData, setRoomPriceData] = useState({});
     const [roomPriceMap, setRoomPriceMap] = useState({});
+    const [discountDetails, setDiscountDetails] = useState(null);
+    const [discountError, setDiscountError] = useState('');
+
     // const [roomDtoList, setRoomDtoList] = useState([]);
 
     useEffect(() => {
@@ -102,6 +105,51 @@ const CheckInForm = () => {
     }, []);
 
 
+    const validateDiscount = async () => {
+        if (!discountCode) {
+            setDiscountDetails(null);
+            return;
+        }
+
+        try {
+            const res = await restClient.get(`/discount/code?code=${discountCode}`, navigate);
+
+            if (res?.responseHeader?.responseCode === "00" && res.data) {
+                const discount = res.data;
+
+                const now = new Date();
+                const validFrom = new Date(discount.startDate);
+                const validTo = new Date(discount.endDate);
+
+                const isValid =
+                    discount.active &&
+                    now >= validFrom &&
+                    now <= validTo;
+
+                if (isValid) {
+                    setDiscountDetails(discount);
+                    setDiscountError('');
+                } else {
+                    setDiscountDetails(null);
+                    setDiscountError('Discount code is expired or invalid.');
+                }
+            } else {
+                setDiscountDetails(null);
+                setDiscountError('Discount code not found.');
+            }
+        } catch (error) {
+            console.error("Failed to validate discount:", error);
+            setDiscountDetails(null);
+            setDiscountError('Failed to validate discount code.');
+        }
+    };
+
+
+    useEffect(() => {
+        validateDiscount();
+    }, [discountCode]);
+
+
 
     const handleAddRoom = () => {
         if (!selectedRoom || !roomType) return;
@@ -127,10 +175,24 @@ const CheckInForm = () => {
         setSelectedRooms([...selectedRooms, newRoom]);
     };
 
+    // useEffect(() => {
+    //     setTotalPrice(selectedRooms.reduce((sum, room) => sum + room.price, 0) * numDays);
+    //     setCurrentPrice(roomTypes.find(r => r.type === roomType)?.price || 0);
+    // }, [selectedRoom, numDays, roomType, selectedRooms, roomTypes]);
+
     useEffect(() => {
-        setTotalPrice(selectedRooms.reduce((sum, room) => sum + room.price, 0) * numDays);
+        const basePrice = selectedRooms.reduce((sum, room) => sum + room.price, 0) * numDays;
+
+        if (discountDetails?.percentage) {
+            const discount = (discountDetails.percentage / 100) * basePrice;
+            setTotalPrice(basePrice - discount);
+        } else {
+            setTotalPrice(basePrice);
+        }
+
         setCurrentPrice(roomTypes.find(r => r.type === roomType)?.price || 0);
-    }, [selectedRoom, numDays, roomType, selectedRooms, roomTypes]);
+    }, [selectedRoom, numDays, roomType, selectedRooms, roomTypes, discountDetails]);
+
 
     const handleChange = (e) => {
         setGuest({ ...guest, [e.target.name]: e.target.value });
@@ -398,7 +460,17 @@ const CheckInForm = () => {
                         </div>
                     </div>
 
-                    <div className="flex items-center space-x-5 py-6">
+                    {discountDetails && (
+                        <div className="text-green-600 text-sm mt-1 text-start py-6">
+                            {discountDetails.percentage}% discount applied
+                        </div>
+                    )}
+                    {discountError && (
+                        <div className="text-red-500 text-sm mt-1 text-start">{discountError}</div>
+                    )}
+
+
+                    <div className="flex items-center space-x-5">
                         <div className="flex flex-col items-start">
                             <label className="block mb-2">Payment Method</label>
                             <select
@@ -415,7 +487,12 @@ const CheckInForm = () => {
                             </select>
                         </div>
 
-                        <input name="Discount" value={discountCode} onChange={setDiscountCode} placeholder="Discount Code" className="input blue-input" />
+                        <input
+                            name="Discount"
+                            value={discountCode}
+                            onChange={(e) => setDiscountCode(e.target.value)}
+                            placeholder="Discount Code"
+                            className="input blue-input" />
                     </div>
 
 

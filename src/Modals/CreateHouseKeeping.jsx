@@ -1,18 +1,23 @@
 import React, { useState } from 'react';
 import ConfirmModal from "../components/ConfirmModal.jsx";
+import LoadingScreen from "../components/LoadingScreen.jsx";
+import restClient from "../utils/restClient.js";
+import {useNavigate} from "react-router-dom";
 
-const CreateHousekeeping = ({ rooms = [],  onClose }) => {
+const CreateHousekeeping = ({ rooms = [], onSubmit,  onClose }) => {
     const [selectedRoom, setSelectedRoom] = useState('');
 
     const [showConfirm, setShowConfirm] = useState(false);
     const [showMissingFields, setShowMissingFields] = useState(false);
+    const [loading, setLoading] = useState(false);
+    const [showSuccessModal, setShowSuccessModal] = useState(false);
+    const navigate = useNavigate();
+    const [modalMessage, setModalMessage] = useState("");
 
-    const onSubmit = () => {
-
-    }
 
     const handleSubmit = () => {
         if (!selectedRoom) {
+            setModalMessage("No room selected")
             setShowMissingFields(true);
         }
         else{
@@ -21,14 +26,45 @@ const CreateHousekeeping = ({ rooms = [],  onClose }) => {
 
     };
 
-    const confirmSubmission = () => {
-        console.log(`Creating HouseKeeping  ${selectedRoom}`);
-        onSubmit(selectedRoom);
+    const confirmSubmission = async () => {
+        // console.log(`Creating HouseKeeping  ${selectedRoom}`);
         setShowConfirm(false);
+        setLoading(true);
+        try {
+            const request = {
+                roomNumber: selectedRoom
+
+            }
+            const res = await restClient.post('/cleaningLog/', request, navigate);
+            // console.log("Add Room",res)
+            if(res.responseHeader.responseCode === "00") {
+                setModalMessage("Item Created");
+                setShowSuccessModal(true);
+            }
+            else{
+                setModalMessage(res.error ?? "Something went wrong!");
+                setShowMissingFields(true);
+            }
+        }
+            // eslint-disable-next-line no-unused-vars
+        catch (error) {
+            setModalMessage("Something went wrong!");
+            setShowMissingFields(true);
+        }
+        finally {
+            setLoading(false);
+        }
     };
+
+    const onSuccess = () => {
+        setShowSuccessModal(false)
+        onClose();
+        onSubmit();
+    }
 
     return (
         <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center text-start text-[15px]">
+            {loading && <LoadingScreen />}
             <div className="bg-white p-6 rounded-lg shadow-lg w-full max-w-md">
                 <div className="flex justify-between items-center mb-4">
                     <h2 className="text-lg font-semibold">Create Housekeeping Task</h2>
@@ -75,8 +111,15 @@ const CreateHousekeeping = ({ rooms = [],  onClose }) => {
             {/* ✅ Missing Fields Modal */}
             {showMissingFields && (
                 <ConfirmModal
-                    message="No room selected"
+                    message={modalMessage}
                     onCancel={() => setShowMissingFields(false)}
+                />
+            )}
+
+            {showSuccessModal && (
+                <ConfirmModal
+                    message={modalMessage}
+                    onCancel={() => onSuccess()}
                 />
             )}
         </div>

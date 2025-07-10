@@ -23,6 +23,7 @@ import User from "./pages/User.jsx";
 import SettingsPage from "./pages/SettingsPage.jsx";
 import RestaurantPage from "./pages/Restaurant.jsx";
 import RestaurantOrders from "./pages/RestaurantOrders.jsx";
+import Refund from "./pages/Refund.jsx";
 
 ReactDOM.createRoot(document.getElementById('root')).render(
     <HashRouter>
@@ -44,6 +45,7 @@ ReactDOM.createRoot(document.getElementById('root')).render(
             <Route path="/house-keeping" element={<HouseKeeping />} />
             <Route path="/invoice" element={<Invoice />} />
             <Route path="/discount" element={<Discount />} />
+            <Route path="/refund" element={<Refund />} />
             <Route path="/users" element={<User />} />
             <Route path="/settings" element={<SettingsPage />} />
             <Route path="/restaurant-bar" element={<RestaurantPage />} />

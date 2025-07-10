@@ -1,7 +1,10 @@
 import React, { useState } from 'react';
 import ConfirmModal from "../components/ConfirmModal.jsx";
+import LoadingScreen from "../components/LoadingScreen.jsx";
+import restClient from "../utils/restClient.js";
+import {useNavigate} from "react-router-dom";
 
-const CreateUser = ({ onClose , userRoleOptions, userAccessOptions}) => {
+const CreateUser = ({ onClose , userRoleOptions, userAccessOptions, onSubmit}) => {
     const [formData, setFormData] = useState({
         email: '',
         username: '',
@@ -12,10 +15,11 @@ const CreateUser = ({ onClose , userRoleOptions, userAccessOptions}) => {
 
     const [showConfirm, setShowConfirm] = useState(false);
     const [showMissingFields, setShowMissingFields] = useState(false);
+    const [loading, setLoading] = useState(false);
+    const [showSuccessModal, setShowSuccessModal] = useState(false);
+    const navigate = useNavigate();
+    const [modalMessage, setModalMessage] = useState("");
 
-    const onSubmit = () => {
-
-    }
     const handleChange = (e) => {
         const { name, value } = e.target;
         setFormData(prev => ({ ...prev, [name]: value }));
@@ -24,21 +28,61 @@ const CreateUser = ({ onClose , userRoleOptions, userAccessOptions}) => {
     const handleSubmit = (e) => {
         e.preventDefault();
         if (!formData.username || !formData.role || !formData.access || !formData.email || !formData.isActive) {
+            setModalMessage("Required Fields cannot be null")
             setShowMissingFields(true);
         }
         else{
-                setShowConfirm(true);
+            setShowConfirm(true);
         }
     };
 
-    const confirmSubmission = () => {
-        console.log(`Creating User  ${formData.username}`);
-        onSubmit(formData);
+    const confirmSubmission = async () => {
+        // console.log(`Creating User  ${formData.username}`);
         setShowConfirm(false);
+        setLoading(true);
+        try {
+            const request = {
+                email: formData.email,
+                username: formData.username,
+                password: null,
+                role: formData.role,
+                enabled: formData.isActive,
+                department: formData.access,
+                createdBy: null,
+                lastModifiedBy: null,
+                createdDateTime: null,
+                lastModifiedDateTime: null
+            }
+            const res = await restClient.post('/admin/create', request, navigate);
+            console.log("Create User",res)
+            if(res.responseHeader.responseCode === "00") {
+                setModalMessage("User Created");
+                setShowSuccessModal(true);
+            }
+            else{
+                setModalMessage(res.error ?? "Something went wrong!");
+                setShowMissingFields(true);
+            }
+        }
+            // eslint-disable-next-line no-unused-vars
+        catch (error) {
+            setModalMessage("Something went wrong!");
+            setShowMissingFields(true);
+        }
+        finally {
+            setLoading(false);
+        }
     };
+
+    const onSuccess = () => {
+        setShowSuccessModal(false)
+        onClose();
+        onSubmit();
+    }
 
     return (
         <div className="fixed inset-0 z-50 bg-black bg-opacity-40 flex items-center justify-center text-start text-[15px]">
+            {loading && <LoadingScreen />}
             <div className="bg-white w-full max-w-md rounded-lg shadow-lg p-6">
                 <div className="flex justify-between items-center mb-4">
                     <h2 className="text-xl font-semibold">Create New User</h2>
@@ -140,8 +184,15 @@ const CreateUser = ({ onClose , userRoleOptions, userAccessOptions}) => {
             {/* ✅ Missing Fields Modal */}
             {showMissingFields && (
                 <ConfirmModal
-                    message="Required Fields cannot be null"
+                    message={modalMessage}
                     onCancel={() => setShowMissingFields(false)}
+                />
+            )}
+
+            {showSuccessModal && (
+                <ConfirmModal
+                    message={modalMessage}
+                    onCancel={() => onSuccess()}
                 />
             )}
         </div>

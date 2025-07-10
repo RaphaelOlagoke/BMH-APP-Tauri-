@@ -100,9 +100,9 @@ const Rooms = () => {
                 roomStatus: selectedStatus || null,
                 roomNumber: selectedRoom || 0,
                 roomType: selectedType || null,
-                needsCleaning: (needsCleaning && (needsCleaning === "Yes")) || null,
-                needsMaintenance: (needsMaintenance && (needsMaintenance === "Yes")) || null,
-                archived: (archived && (archived === "Yes")) || null,
+                needsCleaning: needsCleaning === "Yes" ? true : needsCleaning === "No" ? false : null,
+                needsMaintenance: needsMaintenance === "Yes" ? true : needsMaintenance === "No" ? false : null,
+                archived: archived === "Yes" ? true : archived === "No" ? false : null,
             },navigate);
             // console.log(res)
             if(res.responseHeader.responseCode === "00") {

@@ -1,7 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import ConfirmModal from "../components/ConfirmModal.jsx";
+import {useNavigate} from "react-router-dom";
+import LoadingScreen from "../components/LoadingScreen.jsx";
+import restClient from "../utils/restClient.js";
 
-const UpdateMenuItem = ({ item, categories = [], onClose }) => {
+const UpdateMenuItem = ({ item, categories = [], onClose, onSubmit }) => {
     const [formData, setFormData] = useState({
         name: '',
         price: '',
@@ -10,11 +13,11 @@ const UpdateMenuItem = ({ item, categories = [], onClose }) => {
 
     const [showConfirm, setShowConfirm] = useState(false);
     const [showMissingFields, setShowMissingFields] = useState(false);
+    const [loading, setLoading] = useState(false);
+    const [showSuccessModal, setShowSuccessModal] = useState(false);
+    const navigate = useNavigate();
+    const [modalMessage, setModalMessage] = useState("");
 
-
-    const onSubmit = () => {
-
-    }
 
     useEffect(() => {
         if (item) {
@@ -34,6 +37,7 @@ const UpdateMenuItem = ({ item, categories = [], onClose }) => {
     const handleSubmit = (e) => {
         e.preventDefault();
         if (!formData.name || !formData.price || !formData.category) {
+            setModalMessage("Required Fields cannot be null");
             setShowMissingFields(true);
         }
         else{
@@ -41,14 +45,47 @@ const UpdateMenuItem = ({ item, categories = [], onClose }) => {
         }
     };
 
-    const confirmSubmission = () => {
-        console.log(`Updating Menu Item  ${formData.name}`);
-        onSubmit?.({ ...formData, id: item.id });
+    const confirmSubmission = async () => {
+        // console.log(`Updating Menu Item  ${formData.name}`);
         setShowConfirm(false);
+        setLoading(true);
+        try {
+            const request = {
+                ref: item.ref,
+                name: formData.name,
+                price: formData.price,
+                category: formData.category,
+            }
+            const res = await restClient.post('/restaurant/menuItem/update', request, navigate);
+            // console.log("Add Room",res)
+            if(res.responseHeader.responseCode === "00") {
+                setModalMessage("Item Updated");
+                setShowSuccessModal(true);
+            }
+            else{
+                setModalMessage(res.error ?? "Something went wrong!");
+                setShowMissingFields(true);
+            }
+        }
+            // eslint-disable-next-line no-unused-vars
+        catch (error) {
+            setModalMessage("Something went wrong!");
+            setShowMissingFields(true);
+        }
+        finally {
+            setLoading(false);
+        }
     };
+
+    const onSuccess = () => {
+        setShowSuccessModal(false)
+        onClose();
+        onSubmit();
+    }
 
     return (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 text-start">
+            {loading && <LoadingScreen />}
             <div className="bg-white p-6 rounded-lg shadow-lg w-full max-w-md">
                 <div className="flex justify-between items-center mb-4">
                     <h2 className="text-lg font-semibold">Update Menu Item</h2>
@@ -120,8 +157,14 @@ const UpdateMenuItem = ({ item, categories = [], onClose }) => {
             {/* ✅ Missing Fields Modal */}
             {showMissingFields && (
                 <ConfirmModal
-                    message="Required Fields cannot be null"
+                    message={modalMessage}
                     onCancel={() => setShowMissingFields(false)}
+                />
+            )}
+            {showSuccessModal && (
+                <ConfirmModal
+                    message={modalMessage}
+                    onCancel={() => onSuccess()}
                 />
             )}
 

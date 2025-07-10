@@ -23,6 +23,7 @@ const Sidebar = ({ menuItems }) => {
         } finally {
             localStorage.removeItem('token');
             localStorage.removeItem('user');
+            localStorage.clear();
             navigate('/login');
             setLoading(false);
         }

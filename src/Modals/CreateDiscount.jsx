@@ -1,7 +1,10 @@
 import React, { useState } from 'react';
 import ConfirmModal from "../components/ConfirmModal.jsx";
+import restClient from "../utils/restClient.js";
+import LoadingScreen from "../components/LoadingScreen.jsx";
+import {useNavigate} from "react-router-dom";
 
-const CreateDiscount = ({ onClose }) => {
+const CreateDiscount = ({ onClose, onSubmit }) => {
     const [discountPercentage, setDiscountPercentage] = useState('');
     const [isActive, setIsActive] = useState('true');
     const [oneTimeUse, setOneTimeUse] = useState('false');
@@ -10,13 +13,16 @@ const CreateDiscount = ({ onClose }) => {
 
     const [showConfirm, setShowConfirm] = useState(false);
     const [showMissingFields, setShowMissingFields] = useState(false);
+    const [loading, setLoading] = useState(false);
+    const [showSuccessModal, setShowSuccessModal] = useState(false);
+    const navigate = useNavigate();
+    const [modalMessage, setModalMessage] = useState("");
 
-    const onSubmit = () => {
 
-    }
 
     const handleSubmit = () => {
         if (!discountPercentage || !isActive || !oneTimeUse || !validFrom || !validTo) {
+            setModalMessage("Required Fields cannot be null")
             setShowMissingFields(true);
         }
         else{
@@ -24,21 +30,49 @@ const CreateDiscount = ({ onClose }) => {
         }
     };
 
-    const confirmSubmission = () => {
-        console.log(`Creating Discount  ${discountPercentage}`);
-        const payload = {
-            discountPercentage: parseFloat(discountPercentage),
-            isActive: isActive === 'true',
-            oneTimeUse: oneTimeUse === 'true',
-            validFrom,
-            validTo
-        };
-        onSubmit(payload);
+    const confirmSubmission = async () => {
+        // console.log(`Creating Discount  ${discountPercentage}`);
         setShowConfirm(false);
+        setLoading(true);
+        try {
+            const request = {
+                code: null,
+                percentage: discountPercentage,
+                startDate: validFrom,
+                endDate: validTo,
+                active: isActive,
+                oneTimeUse: oneTimeUse
+            }
+            const res = await restClient.post('/discount/', request, navigate);
+            // console.log("Add Room",res)
+            if(res.responseHeader.responseCode === "00") {
+                setModalMessage("Discount Created");
+                setShowSuccessModal(true);
+            }
+            else{
+                setModalMessage(res.error ?? "Something went wrong!");
+                setShowMissingFields(true);
+            }
+        }
+            // eslint-disable-next-line no-unused-vars
+        catch (error) {
+            setModalMessage("Something went wrong!");
+            setShowMissingFields(true);
+        }
+        finally {
+            setLoading(false);
+        }
     };
+
+    const onSuccess = () => {
+        setShowSuccessModal(false)
+        onClose();
+        onSubmit();
+    }
 
     return (
         <div className="fixed inset-0 bg-black bg-opacity-40 z-50 flex justify-center items-center text-start text-[15px]">
+            {loading && <LoadingScreen />}
             <div className="bg-white p-6 rounded-lg shadow-lg w-full max-w-md">
                 <div className="flex justify-between items-center mb-4">
                     <h2 className="text-xl font-semibold">Create Discount</h2>
@@ -116,8 +150,15 @@ const CreateDiscount = ({ onClose }) => {
             {/* ✅ Missing Fields Modal */}
             {showMissingFields && (
                 <ConfirmModal
-                    message="Required Fields cannot be null"
+                    message={modalMessage}
                     onCancel={() => setShowMissingFields(false)}
+                />
+            )}
+
+            {showSuccessModal && (
+                <ConfirmModal
+                    message={modalMessage}
+                    onCancel={() => onSuccess()}
                 />
             )}
         </div>
