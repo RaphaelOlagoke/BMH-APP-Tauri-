@@ -7,6 +7,7 @@ import restClient from "../utils/restClient.js";
 import {useNavigate} from "react-router-dom";
 import LoadingScreen from "../components/LoadingScreen.jsx";
 import {ArrowLeft} from "lucide-react";
+import {TABLE_SIZE} from "../utils/index.js";
 
 const InventoryHistory = () => {
     const [startDate, setStartDate] = useState('');
@@ -31,7 +32,7 @@ const InventoryHistory = () => {
 
     // const navigate = useNavigate();
 
-    const size = 20;
+    const size = TABLE_SIZE;
 
     const columns = [
         { label: "Ref", accessor: "ref" },

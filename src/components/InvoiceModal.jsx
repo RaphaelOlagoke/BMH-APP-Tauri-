@@ -70,10 +70,12 @@ const InvoiceModal = ({invoices, onClose}) => {
         try {
             const request = {
                 paymentMethod: paymentMethod,
-                invoiceRefs: invoiceData.map((invoice) => invoice.ref),
+                invoiceRefs: invoiceData
+                    .filter((invoice) => invoice.paymentStatus === "UNPAID")
+                    .map((invoice) => invoice.ref),
             }
             const res = await restClient.post('/invoice/resolve', request, navigate);
-            // console.log("Add Room",res)
+            console.log("Add Room",res)
             if (res.responseHeader.responseCode === "00") {
                 await fetchAllInvoices();
 

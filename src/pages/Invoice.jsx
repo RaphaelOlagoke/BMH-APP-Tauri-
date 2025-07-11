@@ -3,7 +3,7 @@ import Sidebar from "../components/Sidebar.jsx";
 import Header from "../components/Header.jsx";
 import Table from "../components/Table.jsx";
 import {
-    expensesInvoiceImg, getUser, menuItems, paidInvoiceImg, syncInvoiceImg, unpaidInvoiceImg
+    expensesInvoiceImg, getUser, menuItems, paidInvoiceImg, syncInvoiceImg, TABLE_SIZE, unpaidInvoiceImg
 } from "../utils/index.js";
 import CreateButton from "../components/CreateButton.jsx";
 import InvoiceFilter from "../components/InvoiceFilter.jsx";
@@ -46,7 +46,7 @@ const Invoice = () => {
 
     const serviceOptions = ["ROOM", "RESTAURANT_BAR", "MAINTENANCE"];
 
-    const size = 20;
+    const size = TABLE_SIZE;
 
     const statusStyles = {
         PAID: "bg-green-100 text-green-800",
@@ -201,10 +201,12 @@ const Invoice = () => {
                 <Header headerText="Hello Evano 👋🏼," />
                 <div className="p-4 my-3 me-3">
                     <div className="flex justify-end mb-4">
-                        <CreateButton onClick={() => setShowCreateModal(true)} />
+                        {getUser().department === "SUPER_ADMIN" && (
+                            <CreateButton onClick={() => setShowCreateModal(true)} />
+                        )}
                     </div>
 
-                    {showCreateModal && getUser().department === "SUPER_ADMIN" && (
+                    {showCreateModal && (
                         <CreateInvoice
                             paymentMethodOptions ={paymentMethodOptions}
                             serviceOptions={serviceOptions}

@@ -3,7 +3,7 @@ import Sidebar from "../components/Sidebar.jsx";
 import Header from "../components/Header.jsx";
 import Table from "../components/Table.jsx";
 import {
-    menuItems
+    menuItems, TABLE_SIZE
 } from "../utils/index.js";
 import CreateButton from "../components/CreateButton.jsx";
 import CreateInvoice from "../Modals/CreateInvoice.jsx";
@@ -32,7 +32,7 @@ const Refund = () => {
     const [modalMessage, setModalMessage] = useState(false);
     const navigate = useNavigate();
 
-    const size = 20;
+    const size = TABLE_SIZE;
 
     const columns = [
         { label: "Refund Ref", accessor: "ref" },

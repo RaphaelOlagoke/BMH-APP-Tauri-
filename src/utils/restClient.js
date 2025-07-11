@@ -1,6 +1,6 @@
 import axios from "axios";
 
-export const BASE_URL = 'http://localhost:8080/api/v1';
+export const BASE_URL = 'https://bmh-backend-api.onrender.com';
 
 function getToken() {
     return localStorage.getItem('token');

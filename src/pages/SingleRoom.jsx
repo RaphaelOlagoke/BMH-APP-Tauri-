@@ -50,25 +50,50 @@ const SingleRoom = () => {
         state.room.roomType = selectedType;
         setRoom(state.room);
     }
-    const onAddMaintenance= () => {
+    // const onAddMaintenance= () => {
+    //
+    // };
 
-    };
-    const onMarkComplete= () => {
-
-    };
+    // const onMarkComplete= () => {
+    //
+    // };
 
     const handleAddMaintenance = (e) => {
         e.preventDefault();
         if (description) {
             setShowConfirm(true);
-            setDescription('');
         }
     };
 
-    const confirmSubmission = () => {
-        console.log(`Adding Maintenance to Room: ${room.roomNumber}`);
-        onAddMaintenance({ description });
+    const confirmSubmission = async () => {
+        // console.log(`Adding Maintenance to Room: ${room.roomNumber}`);
         setShowConfirm(false);
+        setLoading(true);
+        try {
+            const request = {
+                roomNumber: room.roomNumber,
+                description: description
+            }
+            const res = await restClient.post(`/room/maintenance/`, request, navigate);
+            console.log(res)
+            if(res.responseHeader.responseCode === "00") {
+                onSuccess();
+                setModalMessage("Successful" );
+                setShowSuccessModal(true);
+            }
+            else{
+                setModalMessage(res.error ?? "Something went wrong!");
+                setShowError(true);
+            }
+        }
+            // eslint-disable-next-line no-unused-vars
+        catch (error) {
+            setModalMessage("Something went wrong!");
+            setShowError(true);
+        }
+        finally {
+            setLoading(false);
+        }
     };
 
     const confirmArchiveRoom = async () => {
@@ -98,19 +123,72 @@ const SingleRoom = () => {
         }
     };
 
-    const onArchiveSuccess = () => {
+    const onArchiveSuccess = async () => {
         setShowSuccessModal(false)
         state.room.archived = !state.room.archived;
         setRoom(state.room);
+        // await onSuccess();
     }
 
-    const handleComplete = (id) => {
+    const handleComplete = async (id) => {
         if (completionCost) {
-            onMarkComplete(id, Number(completionCost));
-            setMarkingCompleteId(null);
-            setCompletionCost('');
+            setLoading(true);
+            try {
+                const request = {
+                    ref: id,
+                    cost: completionCost
+                }
+                const res = await restClient.post(`/room/maintenance/update`, request, navigate);
+                console.log(res)
+                if(res.responseHeader.responseCode === "00") {
+                    setMarkingCompleteId("")
+                    setDescription("")
+                    onSuccess();
+                    setModalMessage("Successful" );
+                    setShowSuccessModal(true);
+                }
+                else{
+                    setModalMessage(res.error ?? "Something went wrong!");
+                    setShowError(true);
+                }
+            }
+                // eslint-disable-next-line no-unused-vars
+            catch (error) {
+                setModalMessage("Something went wrong!");
+                setShowError(true);
+            }
+            finally {
+                setLoading(false);
+            }
+        }
+        else {
+            setModalMessage("No amount entered!");
+            setShowError(true);
         }
     };
+
+    const onSuccess = async () => {
+        setLoading(true);
+        try {
+            const res = await restClient.get(`/room/single?roomNumber=${room.roomNumber}`, navigate);
+            console.log(res)
+            if(res.responseHeader.responseCode === "00") {
+               setRoom(res.data)
+            }
+            else{
+                setModalMessage(res.error ?? "Something went wrong!");
+                setShowError(true);
+            }
+        }
+            // eslint-disable-next-line no-unused-vars
+        catch (error) {
+            setModalMessage("Something went wrong!");
+            setShowError(true);
+        }
+        finally {
+            setLoading(false);
+        }
+    }
 
     return (
         <div>
@@ -201,7 +279,7 @@ const SingleRoom = () => {
                                     <td className="px-4 py-2">
                     <span
                         className={`px-2 py-1 rounded-full text-xs ${
-                            record.status === 'COMPLETED' ? 'bg-green-100 text-green-700' : 'bg-yellow-100 text-yellow-700'
+                            record.status === 'COMPLETE' ? 'bg-green-100 text-green-700' : 'bg-yellow-100 text-yellow-700'
                         }`}
                     >
                       {record.status}
@@ -210,7 +288,7 @@ const SingleRoom = () => {
                                     <td className="px-4 py-2">{record.createdDateTime}</td>
                                     <td className="px-4 py-2">{record.lastModifiedDateTime || '-'}</td>
                                     <td className="px-4 py-2">
-                                        {record.status !== 'COMPLETED' && markingCompleteId !== record.ref && (
+                                        {record.status !== 'COMPLETE' && markingCompleteId !== record.ref && (
                                             <button
                                                 onClick={() => setMarkingCompleteId(record.ref)}
                                                 className="text-blue-600 hover:underline text-sm"

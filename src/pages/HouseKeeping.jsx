@@ -2,7 +2,7 @@ import React, {useEffect, useState} from 'react'
 import Sidebar from "../components/Sidebar.jsx";
 import Header from "../components/Header.jsx";
 import Table from "../components/Table.jsx";
-import {loadRoomsData, menuItems} from "../utils/index.js";
+import {loadRoomsData, menuItems, TABLE_SIZE} from "../utils/index.js";
 import CreateButton from "../components/CreateButton.jsx";
 import HouseKeepingFilter from "../components/HouseKeepingFilter.jsx";
 import CreateHouseKeeping from "../Modals/CreateHouseKeeping.jsx";
@@ -40,7 +40,7 @@ const HouseKeeping = () => {
 
     const [roomsNeedsCleaningOptions, setRoomsNeedsCleaningOptions] = useState([]);
 
-    const size = 20;
+    const size = TABLE_SIZE;
 
     const statusStyles = {
         COMPLETED: "bg-green-100 text-green-800",

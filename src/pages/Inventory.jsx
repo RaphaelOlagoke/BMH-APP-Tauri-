@@ -2,7 +2,7 @@ import React, {useEffect, useState} from 'react'
 import Sidebar from "../components/Sidebar.jsx";
 import Header from "../components/Header.jsx";
 import Table from "../components/Table.jsx";
-import {menuItems} from "../utils/index.js";
+import {getUser, menuItems, TABLE_SIZE} from "../utils/index.js";
 import CreateButton from "../components/CreateButton.jsx";
 import CreateReservation from "../Modals/CreateReservation.jsx";
 import RoomsFilter from "../components/RoomsFilter.jsx";
@@ -38,7 +38,7 @@ const Inventory = () => {
 
     const reasonOptions = ["MISCOUNT", "DAMAGED", "EXPIRED", "RETURNED", "RESTOCK", "OTHER", "TRANSFERRED"];
 
-    const size = 20;
+    const size = TABLE_SIZE;
 
     const columns = [
         { label: "Name", accessor: "name" },
@@ -110,7 +110,10 @@ const Inventory = () => {
                 <Header headerText="Hello Evano 👋🏼," />
                 <div className="p-4 my-3 me-3">
                     <div className="flex justify-end mb-4">
-                        <CreateButton onClick={() => setShowCreateModal(true)} />
+                        {(getUser().department === "SUPER_ADMIN" || getUser().department === "MANAGER") &&
+                            (
+                                <CreateButton onClick={() => setShowCreateModal(true)} />
+                            )}
                     </div>
 
                     {showCreateModal && (

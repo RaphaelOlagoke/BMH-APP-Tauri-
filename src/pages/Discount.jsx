@@ -2,7 +2,7 @@ import React, {useEffect, useState} from 'react'
 import Sidebar from "../components/Sidebar.jsx";
 import Header from "../components/Header.jsx";
 import Table from "../components/Table.jsx";
-import {menuItems} from "../utils/index.js";
+import {menuItems, TABLE_SIZE} from "../utils/index.js";
 import CreateButton from "../components/CreateButton.jsx";
 import CreateReservation from "../Modals/CreateReservation.jsx";
 import DiscountFilter from "../components/DiscountFilter.jsx";
@@ -43,7 +43,7 @@ const Discount = () => {
         false: "bg-red-200 text-red-700",
     };
 
-    const size = 20;
+    const size = TABLE_SIZE;
 
     const columns = [
         { label: "Discount Code", accessor: "code" },

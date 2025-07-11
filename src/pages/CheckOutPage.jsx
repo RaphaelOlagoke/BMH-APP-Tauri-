@@ -55,30 +55,31 @@ const CheckoutPage = () => {
         fetchRooms();
     }, []);
 
-    useEffect(() => {
-        const fetchGuestData = async () => {
-            setLoading(true);
-            const guestData = await getData(`/guestLog/find?roomNumber=${parseInt(selectedRoom)}`);
+    const fetchGuestData = async () => {
+        setLoading(true);
+        const guestData = await getData(`/guestLog/find?roomNumber=${parseInt(selectedRoom)}`);
 
-            setLoading(false);
-            if(!guestData){
-                setModalMessage("Something went wrong!");
-                setShowMissingFields(true);
-                return;
-            }
-            setGuest(guestData);
-            setInvoices(guestData.invoices);
-            setSelectedRooms(
-                guestData.guestLogRooms
-                    .filter(r => r.guestLogStatus === "ACTIVE")
-                    .map(r => r.room.roomNumber)
-            );
-            setGroupedRooms(
-                guestData.guestLogRooms
-                    .filter(r => r.guestLogStatus === "ACTIVE")
-                    .map(r => r.room.roomNumber)
-            );
-        };
+        setLoading(false);
+        if(!guestData){
+            setModalMessage("Something went wrong!");
+            setShowMissingFields(true);
+            return;
+        }
+        setGuest(guestData);
+        setInvoices(guestData.invoices);
+        setSelectedRooms(
+            guestData.guestLogRooms
+                .filter(r => r.guestLogStatus === "ACTIVE")
+                .map(r => r.room.roomNumber)
+        );
+        setGroupedRooms(
+            guestData.guestLogRooms
+                .filter(r => r.guestLogStatus === "ACTIVE")
+                .map(r => r.room.roomNumber)
+        );
+    };
+
+    useEffect(() => {
 
         if(selectedRoom){
             fetchGuestData();
@@ -115,12 +116,12 @@ const CheckoutPage = () => {
 
         try {
             const res = await restClient.post("/guestLog/check-out", checkOutRequest, navigate);
-            console.log(res)
+            // console.log(res)
             if(res.responseHeader.responseCode === "00") {
                 setShowSuccessModal(true);
             }
             else{
-                setModalMessage(res.responseHeader.responseMessage ?? "Something went wrong!");
+                setModalMessage(res.error ?? "Something went wrong!");
                 setShowMissingFields(true);
             }
         }
@@ -138,6 +139,13 @@ const CheckoutPage = () => {
     const onSuccess = () => {
         setShowSuccessModal(false)
         navigate("/home")
+    }
+
+    const onClose = () => {
+        setShowInvoice(false)
+        if(selectedRoom){
+            fetchGuestData();
+        }
     }
 
     return (
@@ -193,6 +201,7 @@ const CheckoutPage = () => {
                                 guest={guest}
                                 totalPaid={guest.amountPaid}
                                 balance={guest.creditAmount}
+                                totalAmountDue={guest.totalAmountDue}
                             />
                         )}
                     </div>
@@ -229,7 +238,7 @@ const CheckoutPage = () => {
             {showInvoice && (
                 <InvoiceModal
                     invoices={invoices}
-                    onClose={() => setShowInvoice(false)}
+                    onClose={onClose}
                 />
             )}
 

@@ -62,7 +62,9 @@ const SingleGuestLog = () => {
     const onSubmit = async () => {
         setLoading(true);
         try {
-            const currentRoom = guest.guestLogRooms[0].room.roomNumber;
+            const currentRoom = guest.guestLogRooms.find(
+                (logRoom) => logRoom.guestLogStatus === "ACTIVE"
+            )?.room.roomNumber;
             const res = await restClient.get(`/guestLog/find?roomNumber=${currentRoom}`, {}, navigate);
             // console.log(res)
             if(res.responseHeader.responseCode === "00") {
@@ -144,6 +146,11 @@ const SingleGuestLog = () => {
 
     const currentRooms = guest.guestLogRooms.map(r => r.room.roomNumber)
 
+    const onClose = async () => {
+        setShowInvoice(false);
+        await onSubmit();
+    }
+
     return (
         <div className="p-6 max-w-5xl mx-auto">
             {loading && <LoadingScreen />}
@@ -210,7 +217,7 @@ const SingleGuestLog = () => {
             {showInvoice && (
                 <InvoiceModal
                     invoices={guest.invoices}
-                    onClose={() => setShowInvoice(false)}
+                    onClose={onClose}
                 />
             )}
 
@@ -264,7 +271,7 @@ const SingleGuestLog = () => {
                     roomTypes={roomTypes}
                     availableRooms={availableRooms}
                     onClose={() => setChangeRoom(false)}
-                    onSubmit={onSubmit}
+                    onSubmit={() => navigate(-1)}
                 />
             )}
 

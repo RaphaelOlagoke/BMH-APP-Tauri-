@@ -2,7 +2,7 @@ import React, {useEffect, useState} from 'react'
 import Sidebar from "../components/Sidebar.jsx";
 import Header from "../components/Header.jsx";
 import Table from "../components/Table.jsx";
-import {menuItems} from "../utils/index.js";
+import {menuItems, TABLE_SIZE} from "../utils/index.js";
 import CreateButton from "../components/CreateButton.jsx";
 import UserFilter from "../components/UserFilter.jsx";
 import UpdateUser from "../Modals/UpdateUser.jsx";
@@ -39,9 +39,9 @@ const User = () => {
         false: "bg-red-200 text-red-700",
     };
 
-    const size = 20;
+    const size = TABLE_SIZE;
 
-    const userAccessOptions = ["RECEPTIONIST", "RESTAURANT_BAR", "ADMIN", "ACCOUNTS", "MANAGER", "SUPER_ADMIN"];
+    const userAccessOptions = ["RECEPTIONIST", "RESTAURANT_BAR", "ACCOUNTS", "MANAGER", "SUPER_ADMIN"];
     const userRoleOptions = ["USER", "ADMIN", "SUPER_ADMIN"];
 
     const columns = [

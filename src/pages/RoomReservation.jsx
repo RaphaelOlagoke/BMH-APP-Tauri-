@@ -6,7 +6,7 @@ import {Link, useNavigate} from "react-router-dom";
 import {LogIn, LogOut} from "lucide-react";
 import Table from "../components/Table.jsx";
 import GuestLogsFilterForm from "../components/GuestLogsFilterForm.jsx";
-import {fetchRoomsData, loadRoomsData, menuItems} from "../utils/index.js";
+import {fetchRoomsData, loadRoomsData, menuItems, TABLE_SIZE} from "../utils/index.js";
 import RoomReservationFilter from "../components/RoomReservationFilter.jsx";
 import CreateButton from "../components/CreateButton.jsx";
 import CreateReservation from "../Modals/CreateReservation.jsx";
@@ -47,7 +47,7 @@ const RoomReservation = () => {
     };
 
 
-    const size = 20;
+    const size = TABLE_SIZE;
 
     const statusStyles = {
         ACTIVE: "bg-green-100 text-green-800",

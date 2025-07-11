@@ -8,6 +8,7 @@ import {useNavigate} from "react-router-dom";
 import restClient, {BASE_URL} from "../utils/restClient.js";
 import LoadingScreen from "../components/LoadingScreen.jsx";
 import ConfirmModal from "../components/ConfirmModal.jsx";
+import {TABLE_SIZE} from "../utils/index.js";
 
 const RestaurantOrders = () => {
     const [startDate, setStartDate] = useState('');
@@ -180,7 +181,7 @@ const RestaurantOrders = () => {
         CANCELED: "bg-red-200 text-red-700",
     };
 
-    const size = 20;
+    const size = TABLE_SIZE;
 
     const columns = [
         { label: "Customer's Name", accessor: "customerName" },

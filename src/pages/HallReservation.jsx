@@ -2,7 +2,15 @@ import React, {useEffect, useState} from 'react'
 import Sidebar from "../components/Sidebar.jsx";
 import Header from "../components/Header.jsx";
 import Table from "../components/Table.jsx";
-import {HALL_STATUS, HALL_TYPES, ID_TYPES, menuItems, PAYMENT_METHODS, PAYMENT_STATUS} from "../utils/index.js";
+import {
+    HALL_STATUS,
+    HALL_TYPES,
+    ID_TYPES,
+    menuItems,
+    PAYMENT_METHODS,
+    PAYMENT_STATUS,
+    TABLE_SIZE
+} from "../utils/index.js";
 import CreateButton from "../components/CreateButton.jsx";
 import CreateReservation from "../Modals/CreateReservation.jsx";
 import HallReservationFilter from "../components/HallReservationFilter.jsx";
@@ -94,7 +102,7 @@ const HallReservation = () => {
             )},
     ];
 
-    const size = 20;
+    const size = TABLE_SIZE;
 
     const fetchData = async (page) => {
         // const res = await fetch(`/api/items?page=${page}`);

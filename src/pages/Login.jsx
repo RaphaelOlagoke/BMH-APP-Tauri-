@@ -5,6 +5,7 @@ import restClient from "../utils/restClient.js";
 import {useNavigate} from "react-router-dom";
 import LoadingScreen from "../components/LoadingScreen.jsx";
 import ConfirmModal from "../components/ConfirmModal.jsx";
+import { FaEye, FaEyeSlash } from 'react-icons/fa';
 
 
 const Login = () => {
@@ -12,6 +13,7 @@ const Login = () => {
     const [password, setPassword] = useState('');
     const [loading, setLoading] = useState(false);
     const navigate = useNavigate();
+    const [showPassword, setShowPassword] = useState(false);
 
     const [showIncorrectFields, setIncorrectFields] = useState(false);
     const [modalMessage, setModalMessage] = useState("");
@@ -27,10 +29,12 @@ const Login = () => {
 
         setLoading(true);
         try {
-            const res = await restClient.postWithoutToken('/auth/login', {
+            const request = {
                 email: username,
                 password: password,
-            });
+            };
+            console.log(request);
+            const res = await restClient.postWithoutToken('/auth/login', request);
 
             console.log(res)
 
@@ -100,19 +104,25 @@ const Login = () => {
                             />
                         </div>
 
-                        <div>
+                        <div className="relative">
                             <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-1">
                                 Password
                             </label>
                             <input
                                 id="password"
-                                type="password"
+                                type={showPassword ? 'text' : 'password'}
                                 placeholder="••••••••"
                                 value={password}
                                 required={true}
                                 onChange={(e) => setPassword(e.target.value)}
                                 className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                             />
+                            <div
+                                className="absolute inset-y-0 right-3 top-[38px] flex items-center cursor-pointer text-gray-500"
+                                onClick={() => setShowPassword(!showPassword)}
+                            >
+                                {showPassword ? <FaEyeSlash /> : <FaEye />}
+                            </div>
                         </div>
 
                         {/*<div className="text-right">*/}

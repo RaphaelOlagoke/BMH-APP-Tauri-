@@ -2,7 +2,7 @@ import React, {useEffect, useState} from 'react'
 import Sidebar from "../components/Sidebar.jsx";
 import Header from "../components/Header.jsx";
 import Table from "../components/Table.jsx";
-import {menuItems, ROOM_STATUS, ROOM_TYPES} from "../utils/index.js";
+import {getUser, menuItems, ROOM_STATUS, ROOM_TYPES, TABLE_SIZE} from "../utils/index.js";
 import CreateButton from "../components/CreateButton.jsx";
 import CreateReservation from "../Modals/CreateReservation.jsx";
 import RoomsFilter from "../components/RoomsFilter.jsx";
@@ -36,7 +36,7 @@ const Rooms = () => {
     const roomTypeOptions = ROOM_TYPES;
 
 
-    const size = 20;
+    const size = TABLE_SIZE;
 
     const columns = [
         { label: "Room Number", accessor: "roomNumber" },
@@ -156,7 +156,10 @@ const Rooms = () => {
                 <Header headerText="Hello Evano 👋🏼," />
                 <div className="p-4 my-3 me-3">
                     <div className="flex justify-end mb-4">
-                        <CreateButton onClick={() => setShowCreateModal(true)} />
+                        { getUser().department === "SUPER_ADMIN" &&
+                            (
+                                <CreateButton onClick={() => setShowCreateModal(true)} />
+                        )}
                     </div>
 
                     {showCreateModal && (

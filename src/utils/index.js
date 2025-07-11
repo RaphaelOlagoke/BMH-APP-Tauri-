@@ -42,10 +42,10 @@ export const menuItems = [
     { label: 'Guest Logs', icon: FileText, path: '/home' , roles: ["SUPER_ADMIN","ADMIN", "MANAGER", "ACCOUNTS", "RECEPTIONIST"]},
     { label: 'Room Reservation', icon: BedDouble, path: '/room-reservation', roles: ["SUPER_ADMIN","ADMIN", "MANAGER", "ACCOUNTS", "RECEPTIONIST"]},
     { label: 'Hall Reservation', icon: CalendarDays, path: '/hall-reservation' , roles: ["SUPER_ADMIN","ADMIN", "MANAGER", "ACCOUNTS", "RECEPTIONIST"]},
-    { label: 'Rooms', icon: Building2, path: '/rooms', roles: ["SUPER_ADMIN"] },
+    { label: 'Rooms', icon: Building2, path: '/rooms', roles: ["SUPER_ADMIN", "ADMIN", "MANAGER", "ACCOUNTS"] },
     { label: 'Room Service', icon: ClipboardList, path: '/room-service' , roles: ["SUPER_ADMIN"]},
     { label: 'Inventory', icon: ClipboardList, path: '/inventory' , roles: ["SUPER_ADMIN","ADMIN", "MANAGER", "ACCOUNTS"]},
-    { label: 'Restaurant & Bar', icon: Utensils, path: '/restaurant-bar', roles: ["SUPER_ADMIN","ADMIN", "MANAGER", "ACCOUNTS"] },
+    { label: 'Restaurant & Bar', icon: Utensils, path: '/restaurant-bar', roles: ["SUPER_ADMIN"] },
     { label: 'House Keeping', icon: Sparkles, path: '/house-keeping', roles: ["SUPER_ADMIN","ADMIN", "MANAGER", "ACCOUNTS"] },
     { label: 'Invoice', icon: FileText, path: '/invoice', roles: ["SUPER_ADMIN","ADMIN", "MANAGER", "ACCOUNTS"] },
     { label: 'Refund', icon: RotateCcw, path: '/refund', roles: ["SUPER_ADMIN"]},
@@ -54,6 +54,7 @@ export const menuItems = [
     { label: 'Users', icon: Users, path: '/users', roles: ["SUPER_ADMIN"] },
 ];
 
+export const TABLE_SIZE = 15;
 export const ID_TYPES = ['DRIVER_LICENSE', 'PASSPORT', 'NIN', 'VOTER_CARD'];
 
 export const PAYMENT_METHODS = ['CARD', 'CASH', 'TRANSFER'];

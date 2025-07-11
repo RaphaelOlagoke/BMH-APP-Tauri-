@@ -29,7 +29,9 @@ const ExtendStay = ({ onClose, onSubmit, guest }) => {
         setShowConfirm(false);
         setLoading(true);
         try {
-            const currentRoom = guest.guestLogRooms[0].room.roomNumber;
+            const currentRoom = guest.guestLogRooms.find(
+                (logRoom) => logRoom.guestLogStatus === "ACTIVE"
+            )?.room.roomNumber;
             const res = await restClient.post(`/guestLog/extend?roomNumber=${currentRoom}&noOfDays=${extraDays}`, {}, navigate);
             // console.log("Add Room",res)
             if(res.responseHeader.responseCode === "00") {

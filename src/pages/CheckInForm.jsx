@@ -85,7 +85,7 @@ const CheckInForm = () => {
 
                 roomTypesSet.add(type);
 
-                if (room.roomStatus === "AVAILABLE") {
+                if (room.roomStatus === "AVAILABLE" && !room.needsCleaning) {
                     if (!tempAvailableRooms[type]) {
                         tempAvailableRooms[type] = [];
                     }
