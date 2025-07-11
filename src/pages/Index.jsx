@@ -186,6 +186,7 @@ const Index = () => {
         console.log("Submitting");
         setPage(0);
         await loadRoomSummaryData();
+        await loadRoomsData(setLoading, setRoomOptions, roomOptions,"/room/");
         await fetchData(page)
     };
 
@@ -219,7 +220,7 @@ const Index = () => {
             <main className="main ps-20 py-6 text-2xl w-full">
                 <Header headerText="Hello Evano 👋🏼," value={searchTerm}  onChange={setSearchTerm} />
                 <InfoMenu menuItems={roomsList}/>
-                {getUser().department === "SUPER_ADMIN" || getUser().department === "RECEPTIONIST" && (
+                {(getUser().department === "SUPER_ADMIN" || getUser().department === "RECEPTIONIST") && (
                 <div className="flex justify-end space-x-5 py-3 me-5">
                     <Link
                         to="/check-in"

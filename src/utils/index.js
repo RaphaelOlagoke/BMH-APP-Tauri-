@@ -62,7 +62,7 @@ export const HALL_TYPES = ["CONFERENCE_ROOM", "MEETING_ROOM", "MEETING_HALL"];
 export const HALL_STATUS = ["ACTIVE", "COMPLETE", "CANCELED", "UPCOMING"];
 export const PAYMENT_STATUS = ["PAID", "UNPAID", "DEBIT", "REFUNDED"];
 
-export const ROOM_TYPES = ["EXECUTIVE_SUITE", "BUSINESS_SUITE_A", "BUSINESS_SUITE_B", "EXECUTIVE_DELUXE", "DELUXE", "CLASSIC"];
+export const ROOM_TYPES = ["EXECUTIVE_SUITE", "BUSINESS_SUITE_A", "BUSINESS_SUITE_B", "EXECUTIVE_DELUXE", "DELUXE", "CLASSIC", "SUB_CLASSIC"];
 export const ROOM_STATUS = ["AVAILABLE", "OCCUPIED"];
 
 // export const USER = JSON.parse(localStorage.getItem('user'));
@@ -129,6 +129,7 @@ export const fetchRoomsData = async (setModalMessage, setShowMissingFields,setRo
         EXECUTIVE_DELUXE: roomPriceData.executiveDeluxePrice,
         DELUXE: roomPriceData.deluxePrice,
         CLASSIC: roomPriceData.classicPrice,
+        SUB_CLASSIC: roomPriceData.subClassicPrice,
     };
 
     const roomTypesSet = new Set();

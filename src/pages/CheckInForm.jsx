@@ -72,6 +72,7 @@ const CheckInForm = () => {
                 EXECUTIVE_DELUXE: fetchedRoomPriceData.executiveDeluxePrice,
                 DELUXE: fetchedRoomPriceData.deluxePrice,
                 CLASSIC: fetchedRoomPriceData.classicPrice,
+                SUB_CLASSIC: fetchedRoomPriceData.subClassicPrice,
             };
 
             const roomTypesSet = new Set();
@@ -324,6 +325,7 @@ const CheckInForm = () => {
                 EXECUTIVE_DELUXE: roomPriceDataFetched.executiveDeluxePrice,
                 DELUXE: roomPriceDataFetched.deluxePrice,
                 CLASSIC: roomPriceDataFetched.classicPrice,
+                SUB_CLASSIC: roomPriceDataFetched.subClassicPrice,
             };
 
             // Now you can safely use localRoomPriceMap

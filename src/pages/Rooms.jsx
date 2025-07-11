@@ -63,30 +63,31 @@ const Rooms = () => {
             )},
     ];
 
-    useEffect(() => {
-        const fetchRooms = async () => {
-            setLoading(true);
-            try {
-                const res = await restClient.get("/room/",navigate);
-                // console.log(res)
-                if(res.responseHeader.responseCode === "00") {
-                    const data = res.data;
-                    console.log("Room Data",data)
-                    setRoomOptions(data.map(room => room.roomNumber))
-                    if (res.totalPages !== pageCount) {
-                        setPageCount(res.totalPages);
-                    }
+    const fetchRooms = async () => {
+        setLoading(true);
+        try {
+            const res = await restClient.get("/room/",navigate);
+            // console.log(res)
+            if(res.responseHeader.responseCode === "00") {
+                const data = res.data;
+                console.log("Room Data",data)
+                setRoomOptions(data.map(room => room.roomNumber))
+                if (res.totalPages !== pageCount) {
+                    setPageCount(res.totalPages);
                 }
             }
-                // eslint-disable-next-line no-unused-vars
-            catch (error) {
-                setModalMessage("Something went wrong!")
-                setShowModal(true)
-            }
-            finally {
-                setLoading(false);
-            }
         }
+            // eslint-disable-next-line no-unused-vars
+        catch (error) {
+            setModalMessage("Something went wrong!")
+            setShowModal(true)
+        }
+        finally {
+            setLoading(false);
+        }
+    }
+
+    useEffect(() => {
         fetchRooms();
     }, [])
 
@@ -141,6 +142,7 @@ const Rooms = () => {
 
     const handleCreateRoom= () => {
         setPage(0);
+        fetchRooms();
         fetchData(page)
     };
 

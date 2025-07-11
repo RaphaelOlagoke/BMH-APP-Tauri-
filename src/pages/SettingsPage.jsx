@@ -10,23 +10,24 @@ import restClient from "../utils/restClient.js";
 
 const SettingsPage = () => {
     const [roomPrices, setRoomPrices] = useState({
-        EXECUTIVE_SUITE: "",
-        BUSINESS_SUITE_A: "",
-        BUSINESS_SUITE_B: "",
-        EXECUTIVE_DELUXE: "",
-        DELUXE: "",
-        CLASSIC: "",
+        EXECUTIVE_SUITE: 0,
+        BUSINESS_SUITE_A: 0,
+        BUSINESS_SUITE_B: 0,
+        EXECUTIVE_DELUXE: 0,
+        DELUXE: 0,
+        CLASSIC: 0,
+        SUB_CLASSIC: 0,
     });
 
     const [hallPrices, setHallPrices] = useState({
-        CONFERENCE_ROOM: "",
-        MEETING_ROOM: "",
-        MEETING_HALL: ""
+        CONFERENCE_ROOM: 0,
+        MEETING_ROOM: 0,
+        MEETING_HALL:0
     });
 
     const [additionalCharges, setAdditionalCharges] = useState({
-        VAT: '',
-        TAX: '',
+        VAT: 0,
+        TAX: 0,
     })
 
     const [activeSection, setActiveSection] = useState("");
@@ -62,6 +63,7 @@ const SettingsPage = () => {
                 EXECUTIVE_DELUXE: roomPriceData.executiveDeluxePrice,
                 DELUXE: roomPriceData.deluxePrice,
                 CLASSIC: roomPriceData.classicPrice,
+                SUB_CLASSIC: roomPriceData.subClassicPrice,
             };
 
             setRoomPrices(roomPriceMap);
@@ -119,38 +121,44 @@ const SettingsPage = () => {
     const updateRoomPrices = () => {
         console.log('Updating Room Prices:', roomPrices);
         // API call here
-        if (!roomPrices.CLASSIC || !roomPrices.DELUXE || !roomPrices.EXECUTIVE_DELUXE || !roomPrices.BUSINESS_SUITE_A
-            || !roomPrices.BUSINESS_SUITE_B || !roomPrices.EXECUTIVE_SUITE) {
-            setShowMissingFields(true);
-        }
-        else{
-            setActiveSection("Room")
-            setShowConfirm(true);
-        }
+        // if (!roomPrices.SUB_CLASSIC || !roomPrices.CLASSIC || !roomPrices.DELUXE || !roomPrices.EXECUTIVE_DELUXE || !roomPrices.BUSINESS_SUITE_A
+        //     || !roomPrices.BUSINESS_SUITE_B || !roomPrices.EXECUTIVE_SUITE) {
+        //     setShowMissingFields(true);
+        // }
+        // else{
+        //     setActiveSection("Room")
+        //     setShowConfirm(true);
+        // }
+        setActiveSection("Room")
+        setShowConfirm(true);
     };
 
     const updateHallPrices = () => {
         console.log('Updating Hall Prices:', hallPrices);
         // API call here
-        if (!hallPrices.CONFERENCE_ROOM || !hallPrices.MEETING_HALL || !hallPrices.MEETING_ROOM ) {
-            setShowMissingFields(true);
-        }
-        else{
-            setActiveSection("Hall")
-            setShowConfirm(true);
-        }
+        // if (!hallPrices.CONFERENCE_ROOM || !hallPrices.MEETING_HALL || !hallPrices.MEETING_ROOM ) {
+        //     setShowMissingFields(true);
+        // }
+        // else{
+        //     setActiveSection("Hall")
+        //     setShowConfirm(true);
+        // }
+        setActiveSection("Hall")
+        setShowConfirm(true);
     };
 
     const updateCharges = () => {
         console.log('Updating Additional Charges:', additionalCharges);
         // API call here
-        if (!additionalCharges.VAT || !additionalCharges.TAX ) {
-            setShowMissingFields(true);
-        }
-        else{
-            setActiveSection("Charge")
-            setShowConfirm(true);
-        }
+        // if (!additionalCharges.VAT || !additionalCharges.TAX ) {
+        //     setShowMissingFields(true);
+        // }
+        // else{
+        //     setActiveSection("Charge")
+        //     setShowConfirm(true);
+        // }
+        setActiveSection("Charge")
+        setShowConfirm(true);
     };
 
     const confirmSubmission = async () => {
@@ -168,6 +176,7 @@ const SettingsPage = () => {
                     executiveDeluxePrice: roomPrices.EXECUTIVE_DELUXE,
                     deluxePrice: roomPrices.DELUXE,
                     classicPrice : roomPrices.CLASSIC,
+                    subClassicPrice : roomPrices.SUB_CLASSIC,
 
                 };
                 endpoint = "/roomPrices/update";
@@ -189,7 +198,7 @@ const SettingsPage = () => {
                 endpoint = "/additionalCharge/update";
             }
             const res = await restClient.post(endpoint, request, navigate);
-            console.log("Create User",res)
+            // console.log("Prices",res)
             if(res.responseHeader.responseCode === "00") {
                 setModalMessage("Prices Updated");
                 setShowSuccessModal(true);
@@ -225,6 +234,10 @@ const SettingsPage = () => {
                 <div className="bg-white shadow rounded-lg p-6">
                     <h2 className="text-xl font-semibold mb-4">Room Prices</h2>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <label htmlFor="SUB_CLASSIC" className="block font-medium mb-1">Sub Classic Room</label>
+                            <input id="SUB_CLASSIC" name="SUB_CLASSIC" value={roomPrices.SUB_CLASSIC} onChange={handleRoomChange} className="input" />
+                        </div>
                         <div>
                             <label htmlFor="CLASSIC" className="block font-medium mb-1">Classic Room</label>
                             <input id="CLASSIC" name="CLASSIC" value={roomPrices.CLASSIC} onChange={handleRoomChange} className="input" />
