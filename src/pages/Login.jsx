@@ -33,7 +33,7 @@ const Login = () => {
                 email: username,
                 password: password,
             };
-            console.log(request);
+            // console.log(request);
             const res = await restClient.postWithoutToken('/auth/login', request);
 
             console.log(res)
