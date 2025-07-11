@@ -65,14 +65,19 @@ const SingleGuestLog = () => {
             const currentRoom = guest.guestLogRooms.find(
                 (logRoom) => logRoom.guestLogStatus === "ACTIVE"
             )?.room.roomNumber;
-            const res = await restClient.get(`/guestLog/find?roomNumber=${currentRoom}`, {}, navigate);
-            // console.log(res)
-            if(res.responseHeader.responseCode === "00") {
-                setGuest(res.data);
+            if(currentRoom){
+                const res = await restClient.get(`/guestLog/find?roomNumber=${currentRoom}`, {}, navigate);
+                // console.log(res)
+                if(res.responseHeader.responseCode === "00") {
+                    setGuest(res.data);
+                }
+                else{
+                    setModalMessage(res.error ?? "Something went wrong!");
+                    setShowModal(true);
+                }
             }
             else{
-                setModalMessage(res.error ?? "Something went wrong!");
-                setShowModal(true);
+                setLoading(false);
             }
         }
             // eslint-disable-next-line no-unused-vars
