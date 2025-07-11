@@ -105,7 +105,7 @@ const RoomReservation = () => {
             await fetchRoomsData(setModalMessage, setShowModal,setRoomTypes, setAvailableRooms,navigate);
         }
         fetchRoomsAndPrices()
-        loadRoomsData(setLoading, setRoomOptions, navigate, "/room/");
+        loadRoomsData(setLoading, setRoomOptions, navigate, "/room/all");
     },[])
 
     const handlePageChange = (newPage) => {
