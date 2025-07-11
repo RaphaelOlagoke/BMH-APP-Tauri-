@@ -122,7 +122,7 @@ const InvoiceModal = ({invoices, onClose}) => {
         const token = localStorage.getItem('token');
 
         try {
-            const response = await fetch(`http://localhost:8080/api/v1/invoice/download?ref=${ref}`, {
+            const response = await fetch(`${BASE_URL}/invoice/download?ref=${ref}`, {
                 method: 'GET',
                 headers: {
                     'Authorization': `Bearer ${token}`,
