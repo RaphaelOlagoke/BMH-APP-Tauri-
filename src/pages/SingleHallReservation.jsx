@@ -144,8 +144,20 @@ const SingleHallReservation = () => {
                     <h2 className=" font-semibold mb-3 border-b pb-1">Hall Details</h2>
                     <div className="grid grid-cols-2 gap-4 text-sm">
                         <p><strong>Hall Type:</strong> {reservation.hall}</p>
-                        <p><strong>Start Date:</strong> {reservation.startDate}</p>
-                        <p><strong>End Date:</strong> {reservation.endDate}</p>
+                        <p>
+                            <strong>Start Date:</strong>{" "}
+                            {reservation.startDate
+                                ? ((d => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')} ${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`)(new Date(reservation.startDate)))
+                                : "-"}
+                        </p>
+
+                        <p>
+                            <strong>End Date:</strong>{" "}
+                            {reservation.endDate
+                                ? ((d => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')} ${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`)(new Date(reservation.endDate)))
+                                : "-"}
+                        </p>
+
                         <p><strong>Payment Status:</strong> <span className={`px-2 py-1 text-xs font-medium rounded-full ${statusColors[reservation.paymentStatus]}`}>{reservation.paymentStatus}</span></p>
                         <p><strong>Amount Paid:</strong> ₦{reservation.invoices.amountPaid.toLocaleString()}</p>
                         <p className="col-span-2"><strong>Event Description:</strong> {reservation.description}</p>

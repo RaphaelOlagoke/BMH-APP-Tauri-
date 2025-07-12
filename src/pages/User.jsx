@@ -55,9 +55,19 @@ const User = () => {
             </span>
             )},
         { label: "Created By", accessor: "createdBy" },
-        { label: "Date Created", accessor: "createdDateTime" },
+        { label: "Date Created", accessor: "createdDateTime",
+            render: (value) => (
+                value
+                    ? ((d => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}, ${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`)(new Date(value)))
+                    : "-"
+            )},
         { label: "Last Modified By", accessor: "lastModifiedBy" },
-        { label: "Date Modified", accessor: "lastModifiedDateTime" }
+        { label: "Date Modified", accessor: "lastModifiedDateTime",
+            render: (value) => (
+                value
+                    ? ((d => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}, ${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`)(new Date(value)))
+                    : "-"
+            )}
     ];
 
 

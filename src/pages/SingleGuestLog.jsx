@@ -176,9 +176,27 @@ const SingleGuestLog = () => {
                     <p><strong>Phone:</strong> {guest.phoneNumber}</p>
                     <p><strong>Next of Kin:</strong> {guest.nextOfKinName}</p>
                     <p><strong>Next of Kin Phone:</strong> {guest.nextOfKinNumber}</p>
-                    <p><strong>Check-in Date:</strong> {guest.checkInDate}</p>
-                    <p><strong>Expected Checkout:</strong> {guest.expectedCheckOutDate}</p>
-                    <p><strong>Actual Checkout:</strong> {guest.checkOutDate || "Not checked out yet"}</p>
+                    <p>
+                        <strong>Check-in Date:</strong>{" "}
+                        {guest.checkInDate
+                            ? ((d => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')} ${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`)(new Date(guest.checkInDate)))
+                            : "-"}
+                    </p>
+
+                    <p>
+                        <strong>Expected Checkout:</strong>{" "}
+                        {guest.expectedCheckOutDate
+                            ? ((d => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')} ${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`)(new Date(guest.expectedCheckOutDate)))
+                            : "-"}
+                    </p>
+
+                    <p>
+                        <strong>Actual Checkout:</strong>{" "}
+                        {guest.checkOutDate
+                            ? ((d => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')} ${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`)(new Date(guest.checkOutDate)))
+                            : "Not checked out yet"}
+                    </p>
+
                     <p><strong>ID Type:</strong> {guest.idType}</p>
                     <p><strong>ID Reference:</strong> {guest.idRef}</p>
                 </div>

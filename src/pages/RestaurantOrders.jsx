@@ -186,7 +186,12 @@ const RestaurantOrders = () => {
     const columns = [
         { label: "Customer's Name", accessor: "customerName" },
         { label: "Order Ref", accessor: "ref" },
-        { label: "Date", accessor: "createdDateTime" },
+        { label: "Date", accessor: "createdDateTime",
+            render: (value) => (
+                value
+                    ? ((d => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}, ${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`)(new Date(value)))
+                    : "-"
+            )},
         { label: "Status", accessor: "status", render: (value) => (
                 <span className={`px-2 py-1 text-xs font-medium rounded-full ${statusStyles[value]}`}>
                 {value.charAt(0).toUpperCase() + value.slice(1)}

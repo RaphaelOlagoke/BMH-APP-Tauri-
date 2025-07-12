@@ -16,7 +16,7 @@ data
 }) =>
 {
     return (
-        <div className="bg-white px-6 py-12 shadow-lg rounded-2xl me-5">
+        <div className="bg-white px-6 py-12 shadow-lg rounded-2xl me-5 w-max min-w-full overflow-x-scroll">
             {filterForm && <div className="mb-4">{filterForm}</div>}
 
             {/* Table */}

@@ -57,8 +57,18 @@ const Invoice = () => {
 
     const columns = [
         { label: "Invoice Ref", accessor: "ref" },
-        { label: "Issue Date", accessor: "issueDate" },
-        { label: "Payment Date", accessor: "paymentDate"},
+        { label: "Issue Date", accessor: "issueDate",
+            render: (value) => (
+                value
+                    ? ((d => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}, ${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`)(new Date(value)))
+                    : "-"
+            )},
+        { label: "Payment Date", accessor: "paymentDate",
+            render: (value) => (
+                value
+                    ? ((d => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}, ${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`)(new Date(value)))
+                    : "-"
+            )},
         { label: "Payment Method", accessor: "paymentMethod"},
         { label: "Payment Status", accessor: "paymentStatus", render: (value) => (
                 <span className={`px-2 py-1 text-xs font-medium rounded-full ${statusStyles[value]} `}>
@@ -197,7 +207,7 @@ const Invoice = () => {
             {loading && <LoadingScreen />}
             <Sidebar menuItems={menuItems}/>
 
-            <main className="main ps-20 py-6 mt-3 text-2xl w-full">
+            <main className="main ps-20 py-6 mt-3 text-2xl overflow-x-scroll">
                 <Header headerText="Hello Evano 👋🏼," />
                 <div className="p-4 my-3 me-3">
                     <div className="flex justify-end mb-4">

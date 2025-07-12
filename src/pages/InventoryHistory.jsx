@@ -46,7 +46,12 @@ const InventoryHistory = () => {
                 {value.charAt(0).toUpperCase() + value.slice(1)}
             </span>
             )},
-        { label: "Date", accessor: "timestamp" }
+        { label: "Date", accessor: "timestamp",
+            render: (value) => (
+                value
+                    ? ((d => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}, ${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`)(new Date(value)))
+                    : "-"
+            )}
     ];
 
 

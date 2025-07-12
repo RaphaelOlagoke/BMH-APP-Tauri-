@@ -55,8 +55,18 @@ const HouseKeeping = () => {
                 {value.charAt(0).toUpperCase() + value.slice(1)}
             </span>
             )},
-        { label: "Assigned On", accessor: "assignedOn"},
-        { label: "Completed On", accessor: "completedOn"},
+        { label: "Assigned On", accessor: "assignedOn",
+            render: (value) => (
+                value
+                    ? ((d => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}, ${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`)(new Date(value)))
+                    : "-"
+            )},
+        { label: "Completed On", accessor: "completedOn",
+            render: (value) => (
+                value
+                    ? ((d => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}, ${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`)(new Date(value)))
+                    : "-"
+            )},
     ];
 
 

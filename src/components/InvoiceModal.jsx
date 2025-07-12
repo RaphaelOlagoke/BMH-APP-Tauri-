@@ -310,8 +310,20 @@ const InvoiceModal = ({invoices, onClose}) => {
                                 {invoice.paymentStatus}
                             </span>
                         </div>
-                        <p><strong>Issue Date:</strong> {invoice.issueDate}</p>
-                        <p><strong>Payment Date:</strong> {invoice.paymentDate}</p>
+                        <p>
+                            <strong>Issue Date:</strong>{" "}
+                            {invoice.issueDate
+                                ? ((d => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')},  ${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`)(new Date(invoice.issueDate)))
+                                : "-"}
+                        </p>
+
+                        <p>
+                            <strong>Payment Date:</strong>{" "}
+                            {invoice.paymentDate
+                                ? ((d => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')},  ${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`)(new Date(invoice.paymentDate)))
+                                : "-"}
+                        </p>
+
 
                         {invoice.items.length > 0 ? (
                             <table className="min-w-full mt-4 text-sm text-left border">

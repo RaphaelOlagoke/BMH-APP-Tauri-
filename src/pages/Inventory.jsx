@@ -45,8 +45,18 @@ const Inventory = () => {
         { label: "Category", accessor: "category" },
         { label: "Quantity", accessor: "quantity"},
         { label: "Unit", accessor: "unit"},
-        { label: "Created Date", accessor: "createdDateTime"},
-        { label: "Expired Date", accessor: "expiryDate"},
+        { label: "Created Date", accessor: "createdDateTime",
+            render: (value) => (
+                value
+                    ? ((d => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}, ${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`)(new Date(value)))
+                    : "-"
+            )},
+        { label: "Expired Date", accessor: "expiryDate",
+            render: (value) => (
+                value
+                    ? ((d => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}, ${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`)(new Date(value)))
+                    : "-"
+            )},
     ];
 
 

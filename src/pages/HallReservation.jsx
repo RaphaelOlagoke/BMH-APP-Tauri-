@@ -93,8 +93,18 @@ const HallReservation = () => {
                 {value.charAt(0).toUpperCase() + value.slice(1)}
             </span>
             )},
-        { label: "Start Date", accessor: "startDate" },
-        { label: "End Date", accessor: "endDate" },
+        { label: "Start Date", accessor: "startDate",
+            render: (value) => (
+                value
+                    ? ((d => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}, ${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`)(new Date(value)))
+                    : "-"
+            )},
+        { label: "End Date", accessor: "endDate",
+            render: (value) => (
+                value
+                    ? ((d => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}, ${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`)(new Date(value)))
+                    : "-"
+            )},
         { label: "Payment Status", accessor: "paymentStatus", render: (value) => (
                 <span className={`px-2 py-1 text-xs font-medium rounded-full ${value === 'PAID' ? 'bg-green-100 text-green-800' : 'bg-red-200 text-red-700'}`}>
                 {value.charAt(0).toUpperCase() + value.slice(1)}

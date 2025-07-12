@@ -36,7 +36,12 @@ const Refund = () => {
 
     const columns = [
         { label: "Refund Ref", accessor: "ref" },
-        { label: "Date", accessor: "date" },
+        { label: "Date", accessor: "date",
+            render: (value) => (
+                value
+                    ? ((d => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}, ${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`)(new Date(value)))
+                    : "-"
+            )},
         { label: "Amount", accessor: "amount"},
         { label: "Reason", accessor: "reason"},
         { label: "Invoice Ref", accessor: "invoice",  render: (value) => (value.ref)},

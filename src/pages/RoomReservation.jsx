@@ -62,7 +62,12 @@ const RoomReservation = () => {
                 {value}
             </span>
             )},
-        { label: "Date", accessor: "createdDateTime" },
+        { label: "Date", accessor: "createdDateTime",
+            render: (value) => (
+                value
+                    ? ((d => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}, ${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`)(new Date(value)))
+                    : "-"
+            ) },
         { label: "Phone number", accessor: "guestPhoneNumber" },
         { label: "Room(s)", accessor: "roomNumbers", render: (rooms) => rooms.map(r => r.roomNumber).join(', ') },
     ];
