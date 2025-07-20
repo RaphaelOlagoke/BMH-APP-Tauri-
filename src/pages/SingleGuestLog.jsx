@@ -206,7 +206,7 @@ const SingleGuestLog = () => {
             <div className="bg-white p-6 my-8 rounded-xl shadow-md space-y-4 text-start">
                 <div className="flex justify-between items-center border-b pb-2">
                     <h2 className="text-xl font-semibold">Room & Payment Details</h2>
-                    { guest.status === "ACTIVE" && (
+                    { guest.status !== "COMPLETE" && (
                         <div className="relative group">
                             <button className="flex items-center gap-1 text-sm bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">
                                 Actions <MoreVertical size={16} />
