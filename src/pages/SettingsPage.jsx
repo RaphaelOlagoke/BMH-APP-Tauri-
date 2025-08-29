@@ -11,8 +11,8 @@ import restClient from "../utils/restClient.js";
 const SettingsPage = () => {
     const [roomPrices, setRoomPrices] = useState({
         EXECUTIVE_SUITE: 0,
-        BUSINESS_SUITE_A: 0,
-        BUSINESS_SUITE_B: 0,
+        BUSINESS_SUITE: 0,
+        STANDARD: 0,
         EXECUTIVE_DELUXE: 0,
         DELUXE: 0,
         CLASSIC: 0,
@@ -58,8 +58,8 @@ const SettingsPage = () => {
 
             const roomPriceMap = {
                 EXECUTIVE_SUITE: roomPriceData.executiveSuitePrice,
-                BUSINESS_SUITE_A: roomPriceData.businessSuiteAPrice,
-                BUSINESS_SUITE_B: roomPriceData.businessSuiteBPrice,
+                BUSINESS_SUITE: roomPriceData.businessSuiteAPrice,
+                STANDARD: roomPriceData.businessSuiteBPrice,
                 EXECUTIVE_DELUXE: roomPriceData.executiveDeluxePrice,
                 DELUXE: roomPriceData.deluxePrice,
                 CLASSIC: roomPriceData.classicPrice,
@@ -105,7 +105,7 @@ const SettingsPage = () => {
 
     const handleRoomChange = (e) => {
         const { name, value } = e.target;
-        setRoomPrices((prev) => ({ ...prev, [name]: value }));
+        setRoomPrices((prev) => ({ ...prev, [name]: Number(value) }));
     };
 
     const handleHallChange = (e) => {
@@ -170,15 +170,16 @@ const SettingsPage = () => {
             var endpoint = "";
             if(activeSection === "Room"){
                 request = {
-                    executiveSuitePrice: roomPrices.EXECUTIVE_DELUXE,
-                    businessSuiteAPrice: roomPrices.BUSINESS_SUITE_A,
-                    businessSuiteBPrice: roomPrices.BUSINESS_SUITE_B,
+                    executiveSuitePrice: roomPrices.EXECUTIVE_SUITE,
+                    businessSuiteAPrice: roomPrices.BUSINESS_SUITE,
+                    businessSuiteBPrice: roomPrices.STANDARD,
                     executiveDeluxePrice: roomPrices.EXECUTIVE_DELUXE,
                     deluxePrice: roomPrices.DELUXE,
                     classicPrice : roomPrices.CLASSIC,
                     subClassicPrice : roomPrices.SUB_CLASSIC,
 
                 };
+                console.log(request);
                 endpoint = "/roomPrices/update";
             }
             else if (activeSection === "Hall") {
@@ -251,12 +252,12 @@ const SettingsPage = () => {
                             <input id="EXECUTIVE_DELUXE" name="EXECUTIVE_DELUXE" value={roomPrices.EXECUTIVE_DELUXE} onChange={handleRoomChange} className="input" />
                         </div>
                         <div>
-                            <label htmlFor="BUSINESS_SUITE_A" className="block font-medium mb-1">Business Suite A Room</label>
-                            <input id="BUSINESS_SUITE_A" name="BUSINESS_SUITE_A" value={roomPrices.BUSINESS_SUITE_A} onChange={handleRoomChange} className="input" />
+                            <label htmlFor="BUSINESS_SUITE" className="block font-medium mb-1">Business Suite Room</label>
+                            <input id="BUSINESS_SUITE" name="BUSINESS_SUITE" value={roomPrices.BUSINESS_SUITE} onChange={handleRoomChange} className="input" />
                         </div>
                         <div>
-                            <label htmlFor="BUSINESS_SUITE_B" className="block font-medium mb-1">Business Suite B Room</label>
-                            <input id="BUSINESS_SUITE_B" name="BUSINESS_SUITE_B" value={roomPrices.BUSINESS_SUITE_B} onChange={handleRoomChange} className="input" />
+                            <label htmlFor="STANDARD" className="block font-medium mb-1">Standard Room</label>
+                            <input id="STANDARD" name="STANDARD" value={roomPrices.STANDARD} onChange={handleRoomChange} className="input" />
                         </div>
                         <div>
                             <label htmlFor="EXECUTIVE_SUITE" className="block font-medium mb-1">Executive Suite Room</label>

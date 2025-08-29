@@ -67,8 +67,8 @@ const CheckInForm = () => {
 
             const roomPriceMap = {
                 EXECUTIVE_SUITE: fetchedRoomPriceData.executiveSuitePrice,
-                BUSINESS_SUITE_A: fetchedRoomPriceData.businessSuiteAPrice,
-                BUSINESS_SUITE_B: fetchedRoomPriceData.businessSuiteBPrice,
+                BUSINESS_SUITE: fetchedRoomPriceData.businessSuiteAPrice,
+                STANDARD: fetchedRoomPriceData.businessSuiteBPrice,
                 EXECUTIVE_DELUXE: fetchedRoomPriceData.executiveDeluxePrice,
                 DELUXE: fetchedRoomPriceData.deluxePrice,
                 CLASSIC: fetchedRoomPriceData.classicPrice,
@@ -320,8 +320,8 @@ const CheckInForm = () => {
 
             const localRoomPriceMap = {
                 EXECUTIVE_SUITE: roomPriceDataFetched.executiveSuitePrice,
-                BUSINESS_SUITE_A: roomPriceDataFetched.businessSuiteAPrice,
-                BUSINESS_SUITE_B: roomPriceDataFetched.businessSuiteBPrice,
+                BUSINESS_SUITE: roomPriceDataFetched.businessSuiteAPrice,
+                STANDARD: roomPriceDataFetched.businessSuiteBPrice,
                 EXECUTIVE_DELUXE: roomPriceDataFetched.executiveDeluxePrice,
                 DELUXE: roomPriceDataFetched.deluxePrice,
                 CLASSIC: roomPriceDataFetched.classicPrice,
